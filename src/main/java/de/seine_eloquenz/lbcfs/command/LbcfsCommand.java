@@ -125,24 +125,25 @@ public abstract class LbcfsCommand implements CommandExecutor {
         }
         if (validateParameterCount(params)) {
             return run(sender, params);
-        }
-        if (minParams == 0 && maxParams == 0) {
-            plugin.send(sender, Lbcfs.getLbcfsMessage("commandNoParams"));
-            return true;
-        }
-        if (minParams > 0 && maxParams == 0) {
-            plugin.send(sender, String.format(Lbcfs.getLbcfsMessage("commandAtLeastParams"), minParams));
-            return true;
-        }
-        if (minParams == 0 && maxParams > 0) {
-            plugin.send(sender, String.format(Lbcfs.getLbcfsMessage("commandAtMostParams"), maxParams));
-            return true;
-        }
-        if (minParams > 0 && maxParams > 0) {
-            plugin.send(sender, String.format(Lbcfs.getLbcfsMessage("commandParams"), minParams, maxParams));
-            return true;
         } else {
-            return true;
+            if (minParams == 0 && maxParams == 0) {
+                plugin.send(sender, Lbcfs.getLbcfsMessage("commandNoParams"));
+                return true;
+            }
+            if (minParams > 0 && maxParams == 0) {
+                plugin.send(sender, String.format(Lbcfs.getLbcfsMessage("commandAtLeastParams"), minParams));
+                return true;
+            }
+            if (minParams == 0 && maxParams > 0) {
+                plugin.send(sender, String.format(Lbcfs.getLbcfsMessage("commandAtMostParams"), maxParams));
+                return true;
+            }
+            if (minParams > 0 && maxParams > 0) {
+                plugin.send(sender, String.format(Lbcfs.getLbcfsMessage("commandParams"), minParams, maxParams));
+                return true;
+            } else {
+                return true;
+            }
         }
     }
 
