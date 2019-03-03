@@ -57,7 +57,7 @@ public abstract class LbcfsCommand implements CommandExecutor {
      * @param playerOnly whether this command can only be issued by a player or not
      */
     public LbcfsCommand(final String name, final LbcfsPlugin plugin, final int minParams, final int maxParams, final boolean playerOnly) {
-        if (name.equals("?")) {
+        if ("?".equals(name)) {
             throw new IllegalArgumentException("Invalid name '" + name + "'!");
         }
         this.name = name;
