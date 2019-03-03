@@ -90,7 +90,7 @@
     <module name="PackageDeclaration"/>
     <module name="ParameterAssignment"/>
     <module name="LineLength">
-      <property name="max" value="120"/>
+      <property name="max" value="140"/>
       <property name="tabWidth" value="4"/>
     </module>
   </module>
