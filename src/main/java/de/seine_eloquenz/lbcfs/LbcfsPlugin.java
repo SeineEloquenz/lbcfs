@@ -65,7 +65,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
      */
     @SuppressWarnings("EmptyMethod")
     public void setup() {
-
+        //This method can but doesn't have to be overwritten by inheriting classes of LbcfsPlugin
     }
 
     /**
@@ -73,7 +73,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
      */
     @SuppressWarnings("EmptyMethod")
     public void tearDown() {
-
+        //This method can but doesn't have to be overwritten by inheriting classes of LbcfsPlugin
     }
 
     /**
