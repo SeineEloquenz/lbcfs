@@ -33,7 +33,7 @@ public final class Lbcfs extends LbcfsPlugin {
      * Gets the locale lbcfs uses
      * @return locale
      */
-    static Locale getLocale() {
+    protected static Locale getLocale() {
         return instance.locale;
     }
 
