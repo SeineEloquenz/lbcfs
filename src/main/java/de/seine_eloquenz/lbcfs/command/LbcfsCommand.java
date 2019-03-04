@@ -2,6 +2,7 @@ package de.seine_eloquenz.lbcfs.command;
 
 import de.seine_eloquenz.lbcfs.Lbcfs;
 import de.seine_eloquenz.lbcfs.LbcfsPlugin;
+import de.seine_eloquenz.lbcfs.annotations.command.PlayerOnly;
 import de.seine_eloquenz.lbcfs.io.messaging.ChatIO;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -21,18 +22,6 @@ public abstract class LbcfsCommand implements CommandExecutor {
     private final Map<String, SubCommand> subCommands;
     private final int minParams;
     private final int maxParams;
-    private final boolean playerOnly;
-
-    /**
-     * Creates a new LbcfsCommand without parameters for the given plugin which is issuable by any sender
-     * Name may not be "?" as this is reserved
-     *
-     * @param name name of the command
-     * @param plugin the plugin this command belongs to
-     */
-    public LbcfsCommand(final String name, final LbcfsPlugin plugin) {
-        this(name, plugin, 0, 0, false);
-    }
 
     /**
      * Creates a new LbcfsCommand without parameters for the given plugin
@@ -40,10 +29,9 @@ public abstract class LbcfsCommand implements CommandExecutor {
      *
      * @param name name of the command
      * @param plugin the plugin this command belongs to
-     * @param playerOnly whether this command can only be issued by a player or not
      */
-    public LbcfsCommand(final String name, final LbcfsPlugin plugin, final boolean playerOnly) {
-        this(name, plugin, 0, 0, playerOnly);
+    public LbcfsCommand(final String name, final LbcfsPlugin plugin) {
+        this(name, plugin, 0, 0);
     }
 
     /**
@@ -54,9 +42,8 @@ public abstract class LbcfsCommand implements CommandExecutor {
      * @param plugin the plugin this command belongs to
      * @param minParams minimal number of command parameters
      * @param maxParams maximal number of command parameters
-     * @param playerOnly whether this command can only be issued by a player or not
      */
-    public LbcfsCommand(final String name, final LbcfsPlugin plugin, final int minParams, final int maxParams, final boolean playerOnly) {
+    public LbcfsCommand(final String name, final LbcfsPlugin plugin, final int minParams, final int maxParams) {
         if ("?".equals(name)) {
             throw new IllegalArgumentException("Invalid name '" + name + "'!");
         }
@@ -65,7 +52,6 @@ public abstract class LbcfsCommand implements CommandExecutor {
         subCommands = new HashMap<>();
         this.minParams = minParams;
         this.maxParams = maxParams;
-        this.playerOnly = playerOnly;
     }
 
     private String[] cutFirstParam(final String[] params) {
@@ -119,7 +105,7 @@ public abstract class LbcfsCommand implements CommandExecutor {
      * @return true if execution was completed without errors, false otherwise
      */
     private boolean runLogic(final CommandSender sender, final String[] params) {
-        if (playerOnly && !(sender instanceof Player)) {
+        if (isPlayerOnly() && !(sender instanceof Player)) {
             sender.sendMessage(Lbcfs.getLbcfsMessage("playersOnly"));
             return true;
         }
@@ -168,5 +154,9 @@ public abstract class LbcfsCommand implements CommandExecutor {
             ChatIO.sendWithoutPrefix(sender, Lbcfs.getPrimaryColor() + name);
         }
         return true;
+    }
+
+    private boolean isPlayerOnly() {
+        return this.getClass().isAnnotationPresent(PlayerOnly.class);
     }
 }
