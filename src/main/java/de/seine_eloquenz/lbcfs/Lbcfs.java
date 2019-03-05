@@ -1,8 +1,5 @@
 package de.seine_eloquenz.lbcfs;
 
-import de.seine_eloquenz.lbcfs.commands.CmdLbcfs;
-import de.seine_eloquenz.lbcfs.commands.CmdStop;
-import de.seine_eloquenz.lbcfs.commands.CmdTC;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.annotation.permission.Permission;
 import org.bukkit.plugin.java.annotation.plugin.Plugin;
@@ -36,9 +33,6 @@ public final class Lbcfs extends LbcfsPlugin {
     public void setup() {
         instance = this;
         locale = new Locale(this.getConfig().getString("language"));
-        addCommand(new CmdLbcfs(this));
-        addCommand(new CmdStop(this));
-        addCommand(new CmdTC(this));
     }
 
     /**
