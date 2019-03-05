@@ -33,6 +33,7 @@ public final class Lbcfs extends LbcfsPlugin {
     public void setup() {
         instance = this;
         locale = new Locale(this.getConfig().getString("language"));
+        addCommand(new CmdLbcfs(this));
     }
 
     /**
