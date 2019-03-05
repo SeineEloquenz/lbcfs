@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,9 +56,19 @@ public abstract class LbcfsCommand implements CommandExecutor {
             final SubCommand subCmd;
             try {
                 final Class<?> subCmdClass = subCommand.value();
-                final Constructor<?> subCmdConstructor = subCmdClass.getConstructor(LbcfsPlugin.class);
-                subCmd = (SubCommand) subCmdConstructor.newInstance(plugin);
-            } catch (final InstantiationException | NoSuchMethodException | InvocationTargetException
+                if (subCmdClass.getEnclosingClass().equals(subCmdClass)) { //Check if subcommand is declared as own class
+                    final Constructor<?> subCmdConstructor = subCmdClass.getConstructor(LbcfsPlugin.class);
+                    subCmd = (SubCommand) subCmdConstructor.newInstance(plugin);
+                } else { //subcommand is inner class
+                    if (Modifier.isStatic(subCmdClass.getModifiers())) {
+                        final Constructor<?> subCmdConstructor = subCmdClass.getConstructor(LbcfsPlugin.class);
+                        subCmd = (SubCommand) subCmdConstructor.newInstance(plugin);
+                    } else {
+                        final Constructor<?> subCmdConstructor = subCmdClass.getConstructor(this.getClass(), LbcfsPlugin.class);
+                        subCmd = (SubCommand) subCmdConstructor.newInstance(this, plugin);
+                    }
+                }
+                } catch (final InstantiationException | NoSuchMethodException | InvocationTargetException
                     | IllegalAccessException e) {
                 e.printStackTrace(); //Should never happen as all implementing classes have to supply this constructor
                 throw new IllegalStateException("A subcommand of " + this.getName() + " doesn't supply a constructor"
@@ -77,13 +88,16 @@ public abstract class LbcfsCommand implements CommandExecutor {
 
     @Override
     public final boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
-        if (args.length == 0) {
-            return runLogic(sender, args);
+        final SubCommand subCmd = subCommands.get(args.length > 0 ? args[0] : null);
+        if (subCmd != null) {
+            return subCmd.onCommand(sender, command, label, cutFirstParam(args));
+        } else {
+            if (args.length > 0 && args[0].equals("?")) {
+                return listSubcommands(sender);
+            } else {
+                return runLogic(sender, args);
+            }
         }
-        if (args[0].equals("?")) {
-            return listSubcommands(sender);
-        }
-        return subCommands.get(args[0]).onCommand(sender, command, label, cutFirstParam(args));
     }
 
     /**

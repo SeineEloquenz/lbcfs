@@ -31,7 +31,7 @@ public final class ChatIO {
      * @param message message to be sent
      */
     public static void sendTeam(final CommandSender sender, final String message) {
-        broadcast(sender.getName() + ": " + ChatColor.AQUA + message, "Teamchat", "AscSys.moderator");
+        broadcast("Teamchat", sender.getName() + ": " + ChatColor.AQUA + message, "lbcfs.team");
     }
 
     /**

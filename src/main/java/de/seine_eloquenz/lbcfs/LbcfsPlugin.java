@@ -6,11 +6,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.annotation.command.Command;
+import org.reflections.Reflections;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 /**
  * The LbcfsPlugin class represents a plugin created via the Lbcfs framework. The class implements {@link JavaPlugin}
@@ -41,8 +46,19 @@ public abstract class LbcfsPlugin extends JavaPlugin {
             this.reloadConfig();
             this.getLogger().info(CONFIG_FOUND);
         }
-        setup();
+        final Reflections reflections = new Reflections(this.getClass().getPackageName());
+        final Set<Class<?>> cmdClasses = reflections.getTypesAnnotatedWith(Command.class);
+        for (final Class<?> cmd : cmdClasses) {
+            try {
+                final Constructor<?> constructor = cmd.getConstructor(LbcfsPlugin.class);
+                final LbcfsCommand command = (LbcfsCommand) constructor.newInstance(this);
+                commands.add(command);
+            } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace(); //Should never happen in production, as all commands need to supply this constructor
+            }
+        }
         commands.forEach(command -> this.getCommand(command.getName().toLowerCase()).setExecutor(command));
+        setup();
         listeners.forEach(listener -> Bukkit.getServer().getPluginManager().registerEvents(listener, this));
 
     }
@@ -136,14 +152,6 @@ public abstract class LbcfsPlugin extends JavaPlugin {
      */
     public final void addListener(final Listener eventListener) {
         listeners.add(eventListener);
-    }
-
-    /**
-     * Registers a {@link LbcfsCommand} for this plugin
-     * @param command command to register
-     */
-    public final void addCommand(final LbcfsCommand command) {
-        commands.add(command);
     }
 
     /**
