@@ -1,6 +1,10 @@
 package de.seine_eloquenz.lbcfs;
 
+import de.seine_eloquenz.lbcfs.commands.CmdLbcfs;
 import org.bukkit.ChatColor;
+import org.bukkit.plugin.java.annotation.permission.Permission;
+import org.bukkit.plugin.java.annotation.plugin.Plugin;
+import org.bukkit.plugin.java.annotation.plugin.author.Author;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -8,12 +12,14 @@ import java.util.ResourceBundle;
 /**
  * Lbcfs main plugin class
  */
+@Plugin(name = "LBCFS", version = "1.0")
+@Author("Alexander Linder")
+@Permission(name = "lbcfs.admin", desc = "This player acts as an administrator for LBCFS")
 public final class Lbcfs extends LbcfsPlugin {
 
-
     private static final String BUNDLE_NAME = "locale/Locale";
-    private static final String PRIMARY_COLOR_KEY = "primaryColour";
-    private static final String SECONDARY_COLOR_KEY = "secondaryColour";
+    private static final String PRIMARY_COLOR_KEY = "primaryColor";
+    private static final String SECONDARY_COLOR_KEY = "secondaryColor";
 
     private static Lbcfs instance;
     private Locale locale;
