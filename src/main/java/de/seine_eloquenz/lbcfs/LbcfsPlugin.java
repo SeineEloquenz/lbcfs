@@ -16,8 +16,6 @@ import java.util.ResourceBundle;
  * The LbcfsPlugin class represents a plugin created via the Lbcfs framework. The class implements {@link JavaPlugin}
  * and works the same under the hood.
  *
- * The
- *
  * The {@link LbcfsPlugin#setup()} and {@link LbcfsPlugin#tearDown()} replace the methods {@link JavaPlugin#onEnable()}
  * and {@link JavaPlugin#onDisable()} of normal spigot plugins.
  */
@@ -83,7 +81,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
      * @param message   message to be sent
      */
     public final void send(final CommandSender recipient, final String message) {
-        ChatIO.send(recipient, message, this.getChatPrefix());
+        ChatIO.send(recipient, this.getChatPrefix(), message);
     }
 
 
@@ -120,7 +118,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
      * @param message message to send
      */
     public final void broadcast(final String message) {
-        ChatIO.broadcast(message, this.getChatPrefix());
+        ChatIO.broadcast(this.getChatPrefix(), message);
     }
 
     /**
@@ -129,7 +127,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
      * @param permission permission to send to
      */
     public final void broadcast(final String message, final String permission) {
-        ChatIO.broadcast(message, this.getChatPrefix(), permission);
+        ChatIO.broadcast(this.getChatPrefix(), message, permission);
     }
 
     /**

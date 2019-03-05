@@ -18,8 +18,8 @@ public final class ChatIO {
      * Sends a message to a CommandSender
      *
      * @param recipient recipient to send the message to
-     * @param message   message to be sent
      * @param prefix    prefix to be put in front
+     * @param message   message to be sent
      */
     public static void send(final CommandSender recipient, final String prefix, final String message) {
         recipient.sendMessage(compileMessage(message, prefix));
@@ -48,21 +48,21 @@ public final class ChatIO {
     /**
      * Broadcasts a message to all online players
      *
-     * @param message message to be sent
      * @param prefix  prefix to be put in front
+     * @param message message to be sent
      */
-    public static void broadcast(final String message, final String prefix) {
+    public static void broadcast(final String prefix, final String message) {
         Bukkit.broadcastMessage(compileMessage(message, prefix));
     }
 
     /**
      * Broadcasts a message to all online players with the given permission
      *
-     * @param message message to be sent
      * @param prefix  prefix to be put in front
+     * @param message message to be sent
      * @param permission permission to send to
      */
-    public static void broadcast(final String message, final String prefix, final String permission) {
+    public static void broadcast(final String prefix, final String message, final String permission) {
         Bukkit.broadcast(compileMessage(message, prefix), permission);
     }
 
