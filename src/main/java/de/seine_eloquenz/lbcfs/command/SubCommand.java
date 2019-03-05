@@ -1,6 +1,7 @@
 package de.seine_eloquenz.lbcfs.command;
 
 import de.seine_eloquenz.lbcfs.LbcfsPlugin;
+import de.seine_eloquenz.lbcfs.annotations.command.SubCommandName;
 import org.bukkit.command.CommandSender;
 
 /**
@@ -9,29 +10,20 @@ import org.bukkit.command.CommandSender;
 public abstract class SubCommand extends LbcfsCommand {
 
     /**
-     * Creates a new SubCommand with no parameters which can be issued by every {@link CommandSender}
-     * NOTE: Name "?" is reserved for listing of subcommands
-     *
-     * @param name name of the subcommand
-     * @param plugin plugin this command belongs to
-     */
-    public SubCommand(final String name, final LbcfsPlugin plugin) {
-        this(name, plugin, 0, 0);
-    }
-
-    /**
      * Creates a new SubCommand with the given minimal and maximal parameters
      * NOTE: Name "?" is reserved for listing of subcommands
      *
-     * @param name name of the subcommand
      * @param plugin plugin this command belongs to
-     * @param minParams minimum parameter count
-     * @param maxParams maximum parameter count
      */
-    public SubCommand(final String name, final LbcfsPlugin plugin, final int minParams, final int maxParams) {
-        super(name, plugin, minParams, maxParams);
+    public SubCommand(final LbcfsPlugin plugin) {
+        super(plugin);
     }
 
     @Override
     public abstract boolean run(CommandSender sender, String[] args);
+
+    @Override
+    public String getName() {
+        return this.getClass().getAnnotation(SubCommandName.class).value();
+    }
 }
