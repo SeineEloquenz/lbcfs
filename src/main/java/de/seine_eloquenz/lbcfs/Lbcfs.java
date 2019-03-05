@@ -1,6 +1,8 @@
 package de.seine_eloquenz.lbcfs;
 
 import de.seine_eloquenz.lbcfs.commands.CmdLbcfs;
+import de.seine_eloquenz.lbcfs.commands.CmdStop;
+import de.seine_eloquenz.lbcfs.commands.CmdTC;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.annotation.permission.Permission;
 import org.bukkit.plugin.java.annotation.plugin.Plugin;
@@ -15,6 +17,7 @@ import java.util.ResourceBundle;
 @Plugin(name = "LBCFS", version = "1.0")
 @Author("Alexander Linder")
 @Permission(name = "lbcfs.admin", desc = "This player acts as an administrator for LBCFS")
+@Permission(name = "lbcfs.team", desc = "This player is a member of the server team")
 public final class Lbcfs extends LbcfsPlugin {
 
     private static final String BUNDLE_NAME = "locale/Locale";
@@ -34,6 +37,8 @@ public final class Lbcfs extends LbcfsPlugin {
         instance = this;
         locale = new Locale(this.getConfig().getString("language"));
         addCommand(new CmdLbcfs(this));
+        addCommand(new CmdStop(this));
+        addCommand(new CmdTC(this));
     }
 
     /**
