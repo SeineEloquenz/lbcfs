@@ -9,7 +9,7 @@ import org.bukkit.plugin.java.annotation.command.Command;
 /**
  * Prints the version of Lbcfs in chat
  */
-@Command(name = "lbcfs")
+@Command(name = "lbcfs", desc = "Lbcfs main command", permission = "lbcfs.admin")
 @SubCommand(SubCmdVersion.class)
 public class CmdLbcfs extends LbcfsCommand {
 
