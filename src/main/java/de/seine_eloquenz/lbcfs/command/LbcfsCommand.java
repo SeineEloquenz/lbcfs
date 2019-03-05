@@ -2,12 +2,17 @@ package de.seine_eloquenz.lbcfs.command;
 
 import de.seine_eloquenz.lbcfs.Lbcfs;
 import de.seine_eloquenz.lbcfs.LbcfsPlugin;
+import de.seine_eloquenz.lbcfs.annotations.command.MaxArgs;
+import de.seine_eloquenz.lbcfs.annotations.command.MinArgs;
+import de.seine_eloquenz.lbcfs.annotations.command.PlayerOnly;
 import de.seine_eloquenz.lbcfs.io.messaging.ChatIO;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,56 +21,50 @@ import java.util.Map;
  */
 public abstract class LbcfsCommand implements CommandExecutor {
 
-    private final String name;
     private final LbcfsPlugin plugin;
     private final Map<String, SubCommand> subCommands;
     private final int minParams;
     private final int maxParams;
-    private final boolean playerOnly;
-
-    /**
-     * Creates a new LbcfsCommand without parameters for the given plugin which is issuable by any sender
-     * Name may not be "?" as this is reserved
-     *
-     * @param name name of the command
-     * @param plugin the plugin this command belongs to
-     */
-    public LbcfsCommand(final String name, final LbcfsPlugin plugin) {
-        this(name, plugin, 0, 0, false);
-    }
-
-    /**
-     * Creates a new LbcfsCommand without parameters for the given plugin
-     * Name may not be "?" as this is reserved
-     *
-     * @param name name of the command
-     * @param plugin the plugin this command belongs to
-     * @param playerOnly whether this command can only be issued by a player or not
-     */
-    public LbcfsCommand(final String name, final LbcfsPlugin plugin, final boolean playerOnly) {
-        this(name, plugin, 0, 0, playerOnly);
-    }
 
     /**
      * Creates a new LbcfsCommand for the given plugin
+     * Has to be annotated with {@link org.bukkit.plugin.java.annotation.command.Command}
+     * You may <b>not</b> annotate commands in your {@link LbcfsPlugin}s main class!
      * Name may not be "?" as this is reserved
      *
-     * @param name name of the command
      * @param plugin the plugin this command belongs to
-     * @param minParams minimal number of command parameters
-     * @param maxParams maximal number of command parameters
-     * @param playerOnly whether this command can only be issued by a player or not
      */
-    public LbcfsCommand(final String name, final LbcfsPlugin plugin, final int minParams, final int maxParams, final boolean playerOnly) {
-        if ("?".equals(name)) {
-            throw new IllegalArgumentException("Invalid name '" + name + "'!");
+    public LbcfsCommand(final LbcfsPlugin plugin) {
+        if ("?".equals(this.getName())) {
+            throw new IllegalArgumentException("Invalid name '" + this.getName() + "'!");
         }
-        this.name = name;
         this.plugin = plugin;
         subCommands = new HashMap<>();
-        this.minParams = minParams;
-        this.maxParams = maxParams;
-        this.playerOnly = playerOnly;
+        if (this.getClass().isAnnotationPresent(MinArgs.class)) {
+            this.minParams = this.getClass().getAnnotation(MinArgs.class).value();
+        } else {
+            this.minParams = -1;
+        }
+        if (this.getClass().isAnnotationPresent(MaxArgs.class)) {
+            this.maxParams = this.getClass().getAnnotation(MaxArgs.class).value();
+        } else {
+            this.maxParams = -1;
+        }
+        for (final de.seine_eloquenz.lbcfs.annotations.command.SubCommand subCommand
+                : this.getClass().getAnnotationsByType(de.seine_eloquenz.lbcfs.annotations.command.SubCommand.class)) {
+            final SubCommand subCmd;
+            try {
+                final Class<?> subCmdClass = subCommand.value();
+                final Constructor<?> subCmdConstructor = subCmdClass.getConstructor(LbcfsPlugin.class);
+                subCmd = (SubCommand) subCmdConstructor.newInstance(plugin);
+            } catch (final InstantiationException | NoSuchMethodException | InvocationTargetException
+                    | IllegalAccessException e) {
+                e.printStackTrace(); //Should never happen as all implementing classes have to supply this constructor
+                throw new IllegalStateException("A subcommand of " + this.getName() + " doesn't supply a constructor"
+                        + " taking a LbcfsPlugin!");
+            }
+            this.subCommands.put(subCmd.getName(), subCmd);
+        }
     }
 
     private String[] cutFirstParam(final String[] params) {
@@ -91,8 +90,8 @@ public abstract class LbcfsCommand implements CommandExecutor {
      * Gets the name of the command
      * @return name of the command
      */
-    public final String getName() {
-        return name;
+    public String getName() {
+        return this.getClass().getAnnotation(org.bukkit.plugin.java.annotation.command.Command.class).name();
     }
 
     /**
@@ -104,14 +103,6 @@ public abstract class LbcfsCommand implements CommandExecutor {
     }
 
     /**
-     * Adds a {@link SubCommand} to this command
-     * @param subCommand subcommand to add
-     */
-    public final void addSubCommand(final SubCommand subCommand) {
-        subCommands.put(subCommand.getName(), subCommand);
-    }
-
-    /**
      * Runs the command logic
      *
      * @param sender sender who executed the command
@@ -119,7 +110,7 @@ public abstract class LbcfsCommand implements CommandExecutor {
      * @return true if execution was completed without errors, false otherwise
      */
     private boolean runLogic(final CommandSender sender, final String[] params) {
-        if (playerOnly && !(sender instanceof Player)) {
+        if (isPlayerOnly() && !(sender instanceof Player)) {
             sender.sendMessage(Lbcfs.getLbcfsMessage("playersOnly"));
             return true;
         }
@@ -168,5 +159,9 @@ public abstract class LbcfsCommand implements CommandExecutor {
             ChatIO.sendWithoutPrefix(sender, Lbcfs.getPrimaryColor() + name);
         }
         return true;
+    }
+
+    private boolean isPlayerOnly() {
+        return this.getClass().isAnnotationPresent(PlayerOnly.class);
     }
 }
