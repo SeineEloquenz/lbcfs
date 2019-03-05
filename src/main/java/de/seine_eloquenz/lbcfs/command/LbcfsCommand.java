@@ -77,13 +77,16 @@ public abstract class LbcfsCommand implements CommandExecutor {
 
     @Override
     public final boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
-        if (args.length == 0) {
-            return runLogic(sender, args);
+        final SubCommand subCmd = subCommands.get(args.length > 0 ? args[0] : null);
+        if (subCmd != null) {
+            return subCmd.onCommand(sender, command, label, cutFirstParam(args));
+        } else {
+            if (args.length > 0 && args[0].equals("?")) {
+                return listSubcommands(sender);
+            } else {
+                return runLogic(sender, args);
+            }
         }
-        if (args[0].equals("?")) {
-            return listSubcommands(sender);
-        }
-        return subCommands.get(args[0]).onCommand(sender, command, label, cutFirstParam(args));
     }
 
     /**
