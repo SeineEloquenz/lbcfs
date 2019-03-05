@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,9 +56,19 @@ public abstract class LbcfsCommand implements CommandExecutor {
             final SubCommand subCmd;
             try {
                 final Class<?> subCmdClass = subCommand.value();
-                final Constructor<?> subCmdConstructor = subCmdClass.getConstructor(LbcfsPlugin.class);
-                subCmd = (SubCommand) subCmdConstructor.newInstance(plugin);
-            } catch (final InstantiationException | NoSuchMethodException | InvocationTargetException
+                if (subCmdClass.getEnclosingClass().equals(subCmdClass)) { //Check if subcommand is declared as own class
+                    final Constructor<?> subCmdConstructor = subCmdClass.getConstructor(LbcfsPlugin.class);
+                    subCmd = (SubCommand) subCmdConstructor.newInstance(plugin);
+                } else { //subcommand is inner class
+                    if (Modifier.isStatic(subCmdClass.getModifiers())) {
+                        final Constructor<?> subCmdConstructor = subCmdClass.getConstructor(LbcfsPlugin.class);
+                        subCmd = (SubCommand) subCmdConstructor.newInstance(plugin);
+                    } else {
+                        final Constructor<?> subCmdConstructor = subCmdClass.getConstructor(this.getClass(), LbcfsPlugin.class);
+                        subCmd = (SubCommand) subCmdConstructor.newInstance(this, plugin);
+                    }
+                }
+                } catch (final InstantiationException | NoSuchMethodException | InvocationTargetException
                     | IllegalAccessException e) {
                 e.printStackTrace(); //Should never happen as all implementing classes have to supply this constructor
                 throw new IllegalStateException("A subcommand of " + this.getName() + " doesn't supply a constructor"
