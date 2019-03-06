@@ -46,6 +46,14 @@ public abstract class LbcfsPlugin extends JavaPlugin {
             this.reloadConfig();
             this.getLogger().info(CONFIG_FOUND);
         }
+        this.findAndRegisterCommands();
+        setup();
+        listeners.forEach(listener -> Bukkit.getServer().getPluginManager().registerEvents(listener, this));
+
+    }
+
+    private void findAndRegisterCommands() {
+
         final Reflections reflections = new Reflections(this.getClass().getPackageName());
         final Set<Class<?>> cmdClasses = reflections.getTypesAnnotatedWith(Command.class);
         for (final Class<?> cmd : cmdClasses) {
@@ -58,9 +66,6 @@ public abstract class LbcfsPlugin extends JavaPlugin {
             }
         }
         commands.forEach(command -> this.getCommand(command.getName().toLowerCase()).setExecutor(command));
-        setup();
-        listeners.forEach(listener -> Bukkit.getServer().getPluginManager().registerEvents(listener, this));
-
     }
 
     @Override
