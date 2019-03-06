@@ -62,19 +62,10 @@ public abstract class LbcfsPlugin extends JavaPlugin {
     }
 
     private void registerDependencies() {
-        final List<String> hard = this.getDescription().getDepend();
-        final List<String> soft = this.getDescription().getSoftDepend();
-        for (final String dependency : hard) {
-            final Plugin plugin = Bukkit.getPluginManager().getPlugin(dependency);
-            if (plugin == null) {
-                this.getPluginLoader().disablePlugin(this);
-            }
-            hardDependencies.put(dependency, plugin);
-        }
-        for (final String dependency : soft) {
-            final Plugin plugin = Bukkit.getPluginManager().getPlugin(dependency);
-            softDependencies.put(dependency, Bukkit.getPluginManager().getPlugin(dependency));
-        }
+        this.getDescription().getDepend().forEach(
+                dependency -> hardDependencies.put(dependency, Bukkit.getPluginManager().getPlugin(dependency)));
+        this.getDescription().getSoftDepend().forEach(
+                dependency -> softDependencies.put(dependency, Bukkit.getPluginManager().getPlugin(dependency)));
     }
 
     /**
@@ -84,6 +75,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
      * @param <T> Type of the dependency class to get
      * @return the main plugin instance of the dependency
      */
+    //hard dependencies can't get null, as the dependent plugin won't even be loaded if they are missing, so no null return here
     public final <T extends JavaPlugin> T getHardDependency(final Class<T> dependencyClass, final String name) {
         return dependencyClass.cast(this.hardDependencies.get(name));
     }
