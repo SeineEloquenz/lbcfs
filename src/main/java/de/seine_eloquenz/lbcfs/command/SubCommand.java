@@ -1,7 +1,6 @@
 package de.seine_eloquenz.lbcfs.command;
 
 import de.seine_eloquenz.lbcfs.LbcfsPlugin;
-import de.seine_eloquenz.lbcfs.annotations.command.SubCommandName;
 import org.bukkit.command.CommandSender;
 
 /**
@@ -24,6 +23,6 @@ public abstract class SubCommand extends LbcfsCommand {
 
     @Override
     public String getName() {
-        return this.getClass().getAnnotation(SubCommandName.class).value();
+        return this.getClass().getAnnotation(de.seine_eloquenz.lbcfs.annotations.command.SubCommand.class).name();
     }
 }

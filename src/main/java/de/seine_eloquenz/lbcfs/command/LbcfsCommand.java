@@ -10,12 +10,14 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * LbcfsCommand is the class you will have to overwrite to create a command with lbcfs
@@ -51,30 +53,34 @@ public abstract class LbcfsCommand implements CommandExecutor {
         } else {
             this.maxParams = -1;
         }
-        for (final de.seine_eloquenz.lbcfs.annotations.command.SubCommand subCommand
-                : this.getClass().getAnnotationsByType(de.seine_eloquenz.lbcfs.annotations.command.SubCommand.class)) {
-            final SubCommand subCmd;
-            try {
-                final Class<?> subCmdClass = subCommand.value();
-                if (subCmdClass.getEnclosingClass().equals(subCmdClass)) { //Check if subcommand is declared as own class
-                    final Constructor<?> subCmdConstructor = subCmdClass.getConstructor(LbcfsPlugin.class);
-                    subCmd = (SubCommand) subCmdConstructor.newInstance(plugin);
-                } else { //subcommand is inner class
-                    if (Modifier.isStatic(subCmdClass.getModifiers())) {
-                        final Constructor<?> subCmdConstructor = subCmdClass.getConstructor(LbcfsPlugin.class);
-                        subCmd = (SubCommand) subCmdConstructor.newInstance(plugin);
-                    } else {
-                        final Constructor<?> subCmdConstructor = subCmdClass.getConstructor(this.getClass(), LbcfsPlugin.class);
-                        subCmd = (SubCommand) subCmdConstructor.newInstance(this, plugin);
+        this.findAndRegisterSubCommands();
+    }
+
+    private void findAndRegisterSubCommands() {
+        final Reflections reflections = new Reflections(plugin.getClass().getPackageName());
+        final Set<Class<?>> subCmdClasses = reflections.getTypesAnnotatedWith(de.seine_eloquenz.lbcfs.annotations.command.SubCommand.class);
+        for (final Class<?> subCmd : subCmdClasses) {
+            if (subCmd.getAnnotation(de.seine_eloquenz.lbcfs.annotations.command.SubCommand.class).parentCommand()
+                    .equals(this.getClass())) {
+                try {
+                    final SubCommand subCommand;
+                    if (subCmd.getEnclosingClass().equals(subCmd)) { //Check if subcommand is declared as own class
+                        final Constructor<?> subCmdConstructor = subCmd.getConstructor(LbcfsPlugin.class);
+                        subCommand = (SubCommand) subCmdConstructor.newInstance(plugin);
+                    } else { //subcommand is inner class
+                        if (Modifier.isStatic(subCmd.getModifiers())) {
+                            final Constructor<?> subCmdConstructor = subCmd.getConstructor(LbcfsPlugin.class);
+                            subCommand = (SubCommand) subCmdConstructor.newInstance(plugin);
+                        } else {
+                            final Constructor<?> subCmdConstructor = subCmd.getConstructor(this.getClass(), LbcfsPlugin.class);
+                            subCommand = (SubCommand) subCmdConstructor.newInstance(this, plugin);
+                        }
                     }
+                    subCommands.put(subCommand.getName(), subCommand);
+                } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace(); //Should never happen in production, as all commands need to supply this constructor
                 }
-                } catch (final InstantiationException | NoSuchMethodException | InvocationTargetException
-                    | IllegalAccessException e) {
-                e.printStackTrace(); //Should never happen as all implementing classes have to supply this constructor
-                throw new IllegalStateException("A subcommand of " + this.getName() + " doesn't supply a constructor"
-                        + " taking a LbcfsPlugin!");
             }
-            this.subCommands.put(subCmd.getName(), subCmd);
         }
     }
 

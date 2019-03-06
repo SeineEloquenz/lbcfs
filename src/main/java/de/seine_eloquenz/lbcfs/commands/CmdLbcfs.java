@@ -2,7 +2,6 @@ package de.seine_eloquenz.lbcfs.commands;
 
 import de.seine_eloquenz.lbcfs.LbcfsPlugin;
 import de.seine_eloquenz.lbcfs.annotations.command.SubCommand;
-import de.seine_eloquenz.lbcfs.annotations.command.SubCommandName;
 import de.seine_eloquenz.lbcfs.command.LbcfsCommand;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.annotation.command.Command;
@@ -11,7 +10,6 @@ import org.bukkit.plugin.java.annotation.command.Command;
  * Prints the version of Lbcfs in chat
  */
 @Command(name = "lbcfs", desc = "Lbcfs main command", permission = "lbcfs.admin")
-@SubCommand(CmdLbcfs.Version.class)
 public class CmdLbcfs extends LbcfsCommand {
 
     /**
@@ -30,7 +28,7 @@ public class CmdLbcfs extends LbcfsCommand {
     /**
      * This subcommand prints the version of lbcfs into chat
      */
-    @SubCommandName("version")
+    @SubCommand(name = "version", parentCommand = CmdLbcfs.class)
     public final class Version extends de.seine_eloquenz.lbcfs.command.SubCommand {
 
         /**

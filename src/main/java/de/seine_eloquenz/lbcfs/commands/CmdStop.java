@@ -4,7 +4,6 @@ import de.seine_eloquenz.lbcfs.LbcfsPlugin;
 import de.seine_eloquenz.lbcfs.annotations.command.MaxArgs;
 import de.seine_eloquenz.lbcfs.annotations.command.MinArgs;
 import de.seine_eloquenz.lbcfs.annotations.command.SubCommand;
-import de.seine_eloquenz.lbcfs.annotations.command.SubCommandName;
 import de.seine_eloquenz.lbcfs.command.LbcfsCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -15,7 +14,6 @@ import org.bukkit.plugin.java.annotation.command.Command;
  */
 @MinArgs(0)
 @MaxArgs(0)
-@SubCommand(CmdStop.Now.class)
 @Command(name = "stop", desc = "Shuts down the server", permission = "lbcfs.admin")
 public class CmdStop extends LbcfsCommand {
 
@@ -53,7 +51,7 @@ public class CmdStop extends LbcfsCommand {
     /**
      * Specifies that the server shall be shut down immediately
      */
-    @SubCommandName("now")
+    @SubCommand(name = "now", parentCommand = CmdStop.class)
     public static final class Now extends de.seine_eloquenz.lbcfs.command.SubCommand {
 
         /**
