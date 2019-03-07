@@ -16,7 +16,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -81,7 +80,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
     }
 
     /**
-     * Gets a registered hard dependency
+     * Gets a registered soft dependency
      * @param dependencyClass the class of the plugin to get
      * @param name name of the plugin to get
      * @param <T> Type of the dependency class to get
@@ -127,7 +126,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
     }
 
     /**
-     * Run whent the plugin is disabled
+     * Run when the plugin is disabled
      */
     @SuppressWarnings("EmptyMethod")
     public void tearDown() {
