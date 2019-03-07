@@ -5,6 +5,7 @@ import de.seine_eloquenz.lbcfs.io.messaging.ChatIO;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.annotation.command.Command;
 import org.reflections.Reflections;
@@ -13,7 +14,9 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -33,11 +36,15 @@ public abstract class LbcfsPlugin extends JavaPlugin {
 
     private Collection<Listener> listeners;
     private Collection<LbcfsCommand> commands;
+    private Map<String, Plugin> hardDependencies;
+    private Map<String, Plugin> softDependencies;
 
     @Override
     public final void onEnable() {
         listeners = new HashSet<>();
         commands = new HashSet<>();
+        hardDependencies = new HashMap<>();
+        softDependencies = new HashMap<>();
         final File file = new File(this.getDataFolder(), "config.yml");
         if (!file.exists()) {
             this.saveDefaultConfig();
@@ -46,6 +53,45 @@ public abstract class LbcfsPlugin extends JavaPlugin {
             this.reloadConfig();
             this.getLogger().info(CONFIG_FOUND);
         }
+        this.registerDependencies();
+        this.findAndRegisterCommands();
+        setup();
+        listeners.forEach(listener -> Bukkit.getServer().getPluginManager().registerEvents(listener, this));
+
+    }
+
+    private void registerDependencies() {
+        this.getDescription().getDepend().forEach(
+                dependency -> hardDependencies.put(dependency, Bukkit.getPluginManager().getPlugin(dependency)));
+        this.getDescription().getSoftDepend().forEach(
+                dependency -> softDependencies.put(dependency, Bukkit.getPluginManager().getPlugin(dependency)));
+    }
+
+    /**
+     * Gets a registered hard dependency
+     * @param dependencyClass the class of the plugin to get
+     * @param name name of the plugin to get
+     * @param <T> Type of the dependency class to get
+     * @return the main plugin instance of the dependency
+     */
+    //hard dependencies can't get null, as the dependent plugin won't even be loaded if they are missing, so no null return here
+    public final <T extends JavaPlugin> T getHardDependency(final Class<T> dependencyClass, final String name) {
+        return dependencyClass.cast(this.hardDependencies.get(name));
+    }
+
+    /**
+     * Gets a registered soft dependency
+     * @param dependencyClass the class of the plugin to get
+     * @param name name of the plugin to get
+     * @param <T> Type of the dependency class to get
+     * @return the main plugin instance of the dependency, null if the soft dependency was not found
+     */
+    public final <T extends JavaPlugin> T getSoftDependency(final Class<T> dependencyClass, final String name) {
+        return dependencyClass.cast(this.softDependencies.get(name));
+    }
+
+    private void findAndRegisterCommands() {
+
         final Reflections reflections = new Reflections(this.getClass().getPackageName());
         final Set<Class<?>> cmdClasses = reflections.getTypesAnnotatedWith(Command.class);
         for (final Class<?> cmd : cmdClasses) {
@@ -58,9 +104,6 @@ public abstract class LbcfsPlugin extends JavaPlugin {
             }
         }
         commands.forEach(command -> this.getCommand(command.getName().toLowerCase()).setExecutor(command));
-        setup();
-        listeners.forEach(listener -> Bukkit.getServer().getPluginManager().registerEvents(listener, this));
-
     }
 
     @Override
@@ -83,7 +126,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
     }
 
     /**
-     * Run whent the plugin is disabled
+     * Run when the plugin is disabled
      */
     @SuppressWarnings("EmptyMethod")
     public void tearDown() {
