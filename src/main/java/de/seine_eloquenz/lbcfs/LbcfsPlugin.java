@@ -55,6 +55,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
         }
         this.registerDependencies();
         this.findAndRegisterCommands();
+        this.findAndRegisterListeners();
         setup();
         listeners.forEach(listener -> Bukkit.getServer().getPluginManager().registerEvents(listener, this));
 
@@ -91,7 +92,6 @@ public abstract class LbcfsPlugin extends JavaPlugin {
     }
 
     private void findAndRegisterCommands() {
-
         final Reflections reflections = new Reflections(this.getClass().getPackageName());
         final Set<Class<?>> cmdClasses = reflections.getTypesAnnotatedWith(Command.class);
         for (final Class<?> cmd : cmdClasses) {
@@ -104,6 +104,22 @@ public abstract class LbcfsPlugin extends JavaPlugin {
             }
         }
         commands.forEach(command -> this.getCommand(command.getName().toLowerCase()).setExecutor(command));
+    }
+
+    private void  findAndRegisterListeners() {
+        final Reflections reflections = new Reflections(this.getClass().getPackageName());
+        final Set<Class<?>> listenerClasses = reflections.getTypesAnnotatedWith(de.seine_eloquenz.lbcfs.annotations.Listener.class);
+        for (final Class<?> listenerClass : listenerClasses) {
+            try {
+                final Constructor<?> constructor = listenerClass.getConstructor();
+                final Listener listener = (Listener) constructor.newInstance();
+                listeners.add(listener);
+            } catch (final NoSuchMethodException e) {
+                // We skip this Listener, as it doesn't have the needed default constructor
+            } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace(); //Should never happen in production, as all commands need to supply this constructor
+            }
+        }
     }
 
     @Override
