@@ -32,7 +32,12 @@ public final class Lbcfs extends LbcfsPlugin {
     @Override
     public void setup() {
         instance = this;
-        locale = new Locale(this.getConfig().getString("language"));
+        String loc = this.getConfig().getString("language");
+        if (loc == null) {
+            locale = Locale.ENGLISH;
+        } else {
+            locale = new Locale(loc);
+        }
     }
 
     /**
