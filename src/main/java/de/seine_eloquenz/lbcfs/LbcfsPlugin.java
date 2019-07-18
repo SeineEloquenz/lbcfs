@@ -37,8 +37,8 @@ public abstract class LbcfsPlugin extends JavaPlugin {
 
     private Collection<Listener> listeners;
     private Collection<LbcfsCommand> commands;
-    private Map<String, Plugin> hardDependencies;
-    private Map<String, Plugin> softDependencies;
+    private Map<Class<Plugin>, Plugin> hardDependencies;
+    private Map<Class<Plugin>, Plugin> softDependencies;
 
     @Override
     public final void onEnable() {
@@ -63,34 +63,36 @@ public abstract class LbcfsPlugin extends JavaPlugin {
     }
 
     private void registerDependencies() {
-        this.getDescription().getDepend().forEach(
-                dependency -> hardDependencies.put(dependency, Bukkit.getPluginManager().getPlugin(dependency)));
-        this.getDescription().getSoftDepend().forEach(
-                dependency -> softDependencies.put(dependency, Bukkit.getPluginManager().getPlugin(dependency)));
+        this.getDescription().getDepend().forEach(dependency -> registerDependency(dependency, hardDependencies));
+        this.getDescription().getSoftDepend().forEach(dependency -> registerDependency(dependency, softDependencies));
+    }
+
+    private void registerDependency(String pluginName, Map<Class<Plugin>, Plugin> dependencyMap) {
+        final Plugin depPlugin = Bukkit.getPluginManager().getPlugin(pluginName);
+        assert depPlugin != null;
+        dependencyMap.put((Class<Plugin>) depPlugin.getClass(), depPlugin);
     }
 
     /**
      * Gets a registered hard dependency
      * @param dependencyClass the class of the plugin to get
-     * @param name name of the plugin to get
      * @param <T> Type of the dependency class to get
      * @return the main plugin instance of the dependency
      */
     //hard dependencies can't get null, as the dependent plugin won't even be loaded if they are missing, so no null return here
     @NotNull
-    public final <T extends JavaPlugin> T getHardDependency(final Class<T> dependencyClass, final String name) {
-        return dependencyClass.cast(this.hardDependencies.get(name));
+    public final <T extends JavaPlugin> T getHardDependency(final Class<T> dependencyClass) {
+        return dependencyClass.cast(this.hardDependencies.get(dependencyClass));
     }
 
     /**
      * Gets a registered soft dependency
      * @param dependencyClass the class of the plugin to get
-     * @param name name of the plugin to get
      * @param <T> Type of the dependency class to get
      * @return the main plugin instance of the dependency, null if the soft dependency was not found
      */
-    public final <T extends JavaPlugin> T getSoftDependency(final Class<T> dependencyClass, final String name) {
-        return dependencyClass.cast(this.softDependencies.get(name));
+    public final <T extends JavaPlugin> T getSoftDependency(final Class<T> dependencyClass) {
+        return dependencyClass.cast(this.softDependencies.get(dependencyClass));
     }
 
     private void findAndRegisterCommands() {
