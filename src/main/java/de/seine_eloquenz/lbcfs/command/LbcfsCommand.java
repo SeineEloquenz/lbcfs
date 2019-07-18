@@ -23,9 +23,10 @@ import java.util.Set;
 /**
  * LbcfsCommand is the class you will have to overwrite to create a command with lbcfs
  */
-public abstract class LbcfsCommand implements CommandExecutor {
+public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExecutor {
 
     private final LbcfsPlugin plugin;
+    private final Class<T> pluginClass;
     private final Map<String, SubCommand> subCommands;
     private final int minParams;
     private final int maxParams;
@@ -38,11 +39,12 @@ public abstract class LbcfsCommand implements CommandExecutor {
      *
      * @param plugin the plugin this command belongs to
      */
-    public LbcfsCommand(final LbcfsPlugin plugin) {
+    public LbcfsCommand(final T plugin) {
         if ("?".equals(this.getName())) {
             throw new IllegalArgumentException("Invalid name '" + this.getName() + "'!");
         }
         this.plugin = plugin;
+        this.pluginClass = (Class<T>) plugin.getClass();
         subCommands = new HashMap<>();
         if (this.getClass().isAnnotationPresent(MinArgs.class)) {
             this.minParams = this.getClass().getAnnotation(MinArgs.class).value();
@@ -119,8 +121,8 @@ public abstract class LbcfsCommand implements CommandExecutor {
      * Gets the plugin this command is associated with
      * @return plugin
      */
-    public final LbcfsPlugin getPlugin() {
-        return plugin;
+    public final T getPlugin() {
+        return pluginClass.cast(plugin);
     }
 
     /**
