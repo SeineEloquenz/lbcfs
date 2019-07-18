@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.annotation.command.Command;
+import org.jetbrains.annotations.NotNull;
 import org.reflections.Reflections;
 
 import java.io.File;
@@ -76,6 +77,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
      * @return the main plugin instance of the dependency
      */
     //hard dependencies can't get null, as the dependent plugin won't even be loaded if they are missing, so no null return here
+    @NotNull
     public final <T extends JavaPlugin> T getHardDependency(final Class<T> dependencyClass, final String name) {
         return dependencyClass.cast(this.hardDependencies.get(name));
     }
