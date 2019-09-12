@@ -1,7 +1,6 @@
 package de.seine_eloquenz.lbcfs.commands;
 
 import de.seine_eloquenz.lbcfs.Lbcfs;
-import de.seine_eloquenz.lbcfs.LbcfsPlugin;
 import de.seine_eloquenz.lbcfs.annotations.command.SubCommand;
 import de.seine_eloquenz.lbcfs.command.LbcfsCommand;
 import org.bukkit.command.CommandSender;
