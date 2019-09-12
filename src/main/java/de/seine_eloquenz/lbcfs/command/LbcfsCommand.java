@@ -260,7 +260,6 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
             this.plugin.getLogger().log(Level.WARNING, "More tab options were provided for " + this.getName()
             + " of plugin " + this.plugin.getName() + "! Options were truncated at max!");
         }
-        Map<Integer, List<String>> tablist = new HashMap<>();
         return Stream.of(tabOptions).map(List::of).limit(maxParams).collect(Collectors.toCollection(ArrayList::new));
     }
 

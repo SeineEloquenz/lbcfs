@@ -5,6 +5,7 @@ import org.bukkit.command.CommandSender;
 
 /**
  * AscCommand
+ * @param <T> your plugin type
  */
 public abstract class SubCommand <T extends LbcfsPlugin> extends LbcfsCommand<T> {
 
