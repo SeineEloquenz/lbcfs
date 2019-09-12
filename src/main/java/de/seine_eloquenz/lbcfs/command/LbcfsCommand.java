@@ -9,6 +9,7 @@ import de.seine_eloquenz.lbcfs.io.messaging.ChatIO;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.reflections.Reflections;
@@ -16,7 +17,9 @@ import org.reflections.Reflections;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -27,13 +30,14 @@ import java.util.stream.Stream;
  * LbcfsCommand is the class you will have to overwrite to create a command with lbcfs
  * @param <T> your plugin
  */
-public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExecutor {
+public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExecutor, TabCompleter {
 
     private final LbcfsPlugin plugin;
     private final Class<T> pluginClass;
     private final Map<String, SubCommand> subCommands;
     private final int minParams;
     private final int maxParams;
+    private final ArrayList<List<String>> tabOptions;
 
     /**
      * Creates a new LbcfsCommand for the given plugin
@@ -60,6 +64,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
         } else {
             this.maxParams = -1;
         }
+        this.tabOptions = constructTabList(getTabOptions());
         this.findAndRegisterSubCommands();
     }
 
@@ -208,7 +213,77 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
         return true;
     }
 
+    /**
+     * Executes when tabbed of the Command
+     * @param sender - the sender that executes the command
+     * @param alias - the command alias used for this action
+     * @param args - the args of the command
+     * @return args to use for tab completion
+     */
+    @Override
+    public final List<String> onTabComplete(@NotNull final CommandSender sender, @NotNull Command command,
+                                            @NotNull final String alias, @NotNull final String[] args) {
+        if (args.length == 1) {
+            Stream<String> tabOptionStream;
+            if (tabOptions.size() < 1) {
+                tabOptionStream = Stream.empty();
+            } else {
+                tabOptionStream = tabOptions.get(0).stream();
+            }
+            return Stream.concat(subCommands.values().stream().map(SubCommand::getName),
+                    tabOptionStream).collect(Collectors.toList());
+        }
+        final SubCommand subCmd = subCommands.get(args.length > 1 ? args[1] : null);
+        if (subCmd != null) {
+            //noinspection unchecked
+            return subCmd.onTabComplete(sender, command, alias, cutFirstParam(args));
+        } else {
+            if (args.length > tabOptions.size()) {
+                return new ArrayList<>();
+            }
+            return tabOptions.get(args.length - 1).stream().filter(o -> o.startsWith(args[args.length - 1]))
+                    .collect(Collectors.toList());
+        }
+    }
+
+    /**
+     * Constructs the tab complete options from the entered values. You may supply as many options as you like
+     * The tab complete options have to be sorted in their natural order
+     * @param tabOptions options for this command
+     * @return constructed tablist mapping
+     */
+    private ArrayList<List<String>> constructTabList(String[][] tabOptions) {
+        if (tabOptions == null) {
+            return new ArrayList<>();
+        }
+        if (tabOptions.length > maxParams) {
+            this.plugin.getLogger().log(Level.WARNING, "More tab options were provided for " + this.getName()
+            + " of plugin " + this.plugin.getName() + "! Options were truncated at max!");
+        }
+        Map<Integer, List<String>> tablist = new HashMap<>();
+        return Stream.of(tabOptions).map(List::of).limit(maxParams).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * Override this method to supply tab options to your command. Supply an array of options per allow param depth
+     *
+     * Example: maxParams = 2
+     * new String[][]{ { "test", "version"}, { help } }
+     * @return tab options
+     */
+    protected String[][] getTabOptions() {
+        return null;
+    }
+
     private boolean isPlayerOnly() {
         return this.getClass().isAnnotationPresent(PlayerOnly.class);
+    }
+
+    /**
+     * Checks whether this command supports tab completion
+     * @return true if tab completion is supported
+     */
+    public final boolean supportsTab() {
+        return this.getTabOptions() != null;
     }
 }
