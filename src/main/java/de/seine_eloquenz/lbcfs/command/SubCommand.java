@@ -5,8 +5,9 @@ import org.bukkit.command.CommandSender;
 
 /**
  * AscCommand
+ * @param <T> your plugin type
  */
-public abstract class SubCommand extends LbcfsCommand {
+public abstract class SubCommand <T extends LbcfsPlugin> extends LbcfsCommand<T> {
 
     /**
      * Creates a new SubCommand with the given minimal and maximal parameters
@@ -14,7 +15,7 @@ public abstract class SubCommand extends LbcfsCommand {
      *
      * @param plugin plugin this command belongs to
      */
-    public SubCommand(final LbcfsPlugin plugin) {
+    public SubCommand(final T plugin) {
         super(plugin);
     }
 

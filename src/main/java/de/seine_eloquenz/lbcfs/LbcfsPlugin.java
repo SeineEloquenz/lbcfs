@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.annotation.command.Command;
+import org.jetbrains.annotations.NotNull;
 import org.reflections.Reflections;
 
 import java.io.File;
@@ -19,6 +20,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * The LbcfsPlugin class represents a plugin created via the Lbcfs framework. The class implements {@link JavaPlugin}
@@ -36,8 +38,8 @@ public abstract class LbcfsPlugin extends JavaPlugin {
 
     private Collection<Listener> listeners;
     private Collection<LbcfsCommand> commands;
-    private Map<String, Plugin> hardDependencies;
-    private Map<String, Plugin> softDependencies;
+    private Map<Class<Plugin>, Plugin> hardDependencies;
+    private Map<Class<Plugin>, Plugin> softDependencies;
 
     @Override
     public final void onEnable() {
@@ -55,55 +57,81 @@ public abstract class LbcfsPlugin extends JavaPlugin {
         }
         this.registerDependencies();
         this.findAndRegisterCommands();
+        this.findAndRegisterListeners();
         setup();
         listeners.forEach(listener -> Bukkit.getServer().getPluginManager().registerEvents(listener, this));
 
     }
 
     private void registerDependencies() {
-        this.getDescription().getDepend().forEach(
-                dependency -> hardDependencies.put(dependency, Bukkit.getPluginManager().getPlugin(dependency)));
-        this.getDescription().getSoftDepend().forEach(
-                dependency -> softDependencies.put(dependency, Bukkit.getPluginManager().getPlugin(dependency)));
+        this.getDescription().getDepend().forEach(dependency -> registerDependency(dependency, hardDependencies));
+        this.getDescription().getSoftDepend().forEach(dependency -> registerDependency(dependency, softDependencies));
+    }
+
+    private void registerDependency(String pluginName, Map<Class<Plugin>, Plugin> dependencyMap) {
+        final Plugin depPlugin = Bukkit.getPluginManager().getPlugin(pluginName);
+        assert depPlugin != null;
+        dependencyMap.put((Class<Plugin>) depPlugin.getClass(), depPlugin);
     }
 
     /**
      * Gets a registered hard dependency
      * @param dependencyClass the class of the plugin to get
-     * @param name name of the plugin to get
      * @param <T> Type of the dependency class to get
      * @return the main plugin instance of the dependency
      */
     //hard dependencies can't get null, as the dependent plugin won't even be loaded if they are missing, so no null return here
-    public final <T extends JavaPlugin> T getHardDependency(final Class<T> dependencyClass, final String name) {
-        return dependencyClass.cast(this.hardDependencies.get(name));
+    @NotNull
+    public final <T extends JavaPlugin> T getHardDependency(final Class<T> dependencyClass) {
+        return dependencyClass.cast(this.hardDependencies.get(dependencyClass));
     }
 
     /**
      * Gets a registered soft dependency
      * @param dependencyClass the class of the plugin to get
-     * @param name name of the plugin to get
      * @param <T> Type of the dependency class to get
      * @return the main plugin instance of the dependency, null if the soft dependency was not found
      */
-    public final <T extends JavaPlugin> T getSoftDependency(final Class<T> dependencyClass, final String name) {
-        return dependencyClass.cast(this.softDependencies.get(name));
+    public final <T extends JavaPlugin> T getSoftDependency(final Class<T> dependencyClass) {
+        return dependencyClass.cast(this.softDependencies.get(dependencyClass));
     }
 
     private void findAndRegisterCommands() {
-
         final Reflections reflections = new Reflections(this.getClass().getPackageName());
         final Set<Class<?>> cmdClasses = reflections.getTypesAnnotatedWith(Command.class);
         for (final Class<?> cmd : cmdClasses) {
             try {
-                final Constructor<?> constructor = cmd.getConstructor(LbcfsPlugin.class);
+                final Constructor<?> constructor =
+                        Stream.of(cmd.getConstructors())
+                                .filter(c -> LbcfsPlugin.class.isAssignableFrom(c.getParameterTypes()[0]))
+                                .findFirst().orElse(null);
+                if (constructor == null) {
+                    throw new InstantiationException("Could not find Constructor of " + cmd.getName()
+                    + " of declaring plugin " + this.getName() + " which takes only the plugin as argument!");
+                }
                 final LbcfsCommand command = (LbcfsCommand) constructor.newInstance(this);
                 commands.add(command);
-            } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace(); //Should never happen in production, as all commands need to supply this constructor
             }
         }
         commands.forEach(command -> this.getCommand(command.getName().toLowerCase()).setExecutor(command));
+    }
+
+    private void  findAndRegisterListeners() {
+        final Reflections reflections = new Reflections(this.getClass().getPackageName());
+        final Set<Class<?>> listenerClasses = reflections.getTypesAnnotatedWith(de.seine_eloquenz.lbcfs.annotations.Listener.class);
+        for (final Class<?> listenerClass : listenerClasses) {
+            try {
+                final Constructor<?> constructor = listenerClass.getConstructor();
+                final Listener listener = (Listener) constructor.newInstance();
+                listeners.add(listener);
+            } catch (final NoSuchMethodException e) {
+                // We skip this Listener, as it doesn't have the needed default constructor
+            } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace(); //Should never happen in production, as all commands need to supply this constructor
+            }
+        }
     }
 
     @Override

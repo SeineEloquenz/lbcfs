@@ -9,25 +9,35 @@ import de.seine_eloquenz.lbcfs.io.messaging.ChatIO;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * LbcfsCommand is the class you will have to overwrite to create a command with lbcfs
+ * @param <T> your plugin
  */
-public abstract class LbcfsCommand implements CommandExecutor {
+public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExecutor, TabCompleter {
 
     private final LbcfsPlugin plugin;
+    private final Class<T> pluginClass;
     private final Map<String, SubCommand> subCommands;
     private final int minParams;
     private final int maxParams;
+    private final ArrayList<List<String>> tabOptions;
 
     /**
      * Creates a new LbcfsCommand for the given plugin
@@ -37,11 +47,12 @@ public abstract class LbcfsCommand implements CommandExecutor {
      *
      * @param plugin the plugin this command belongs to
      */
-    public LbcfsCommand(final LbcfsPlugin plugin) {
+    public LbcfsCommand(final T plugin) {
         if ("?".equals(this.getName())) {
             throw new IllegalArgumentException("Invalid name '" + this.getName() + "'!");
         }
         this.plugin = plugin;
+        this.pluginClass = (Class<T>) plugin.getClass();
         subCommands = new HashMap<>();
         if (this.getClass().isAnnotationPresent(MinArgs.class)) {
             this.minParams = this.getClass().getAnnotation(MinArgs.class).value();
@@ -53,6 +64,7 @@ public abstract class LbcfsCommand implements CommandExecutor {
         } else {
             this.maxParams = -1;
         }
+        this.tabOptions = constructTabList(getTabOptions());
         this.findAndRegisterSubCommands();
     }
 
@@ -65,22 +77,42 @@ public abstract class LbcfsCommand implements CommandExecutor {
                 try {
                     final SubCommand subCommand;
                     if (subCmd.getEnclosingClass().equals(subCmd)) { //Check if subcommand is declared as own class
-                        final Constructor<?> subCmdConstructor = subCmd.getConstructor(LbcfsPlugin.class);
+                        final Constructor<?> subCmdConstructor = this.getSubCommandConstructor(subCmd);
+                        this.validateSubCmdConstructor(subCmdConstructor, subCmd);
                         subCommand = (SubCommand) subCmdConstructor.newInstance(plugin);
                     } else { //subcommand is inner class
                         if (Modifier.isStatic(subCmd.getModifiers())) {
-                            final Constructor<?> subCmdConstructor = subCmd.getConstructor(LbcfsPlugin.class);
+                            final Constructor<?> subCmdConstructor = this.getSubCommandConstructor(subCmd);
+                            this.validateSubCmdConstructor(subCmdConstructor, subCmd);
                             subCommand = (SubCommand) subCmdConstructor.newInstance(plugin);
                         } else {
-                            final Constructor<?> subCmdConstructor = subCmd.getConstructor(this.getClass(), LbcfsPlugin.class);
+                            final Constructor<?> subCmdConstructor = Stream.of(subCmd.getConstructors())
+                                    .filter(c -> this.getClass().isAssignableFrom(c.getParameterTypes()[0])
+                                            && LbcfsPlugin.class.isAssignableFrom(c.getParameterTypes()[1]))
+                                    .findFirst().orElse(null);
+                            this.validateSubCmdConstructor(subCmdConstructor, subCmd);
                             subCommand = (SubCommand) subCmdConstructor.newInstance(this, plugin);
                         }
                     }
                     subCommands.put(subCommand.getName(), subCommand);
-                } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace(); //Should never happen in production, as all commands need to supply this constructor
                 }
             }
+        }
+    }
+
+    private Constructor<?> getSubCommandConstructor(final Class<?> subCmd) {
+        return Stream.of(subCmd.getConstructors())
+                .filter(c -> LbcfsPlugin.class.isAssignableFrom(c.getParameterTypes()[0]))
+                .findFirst().orElse(null);
+    }
+
+    private void validateSubCmdConstructor(Constructor<?> subCmdConstructor, Class<?> subCmd) throws InstantiationException {
+        if (subCmdConstructor == null) {
+            throw new InstantiationException("Could not find Constructor of " + subCmd.getName()
+                    + " of declaring command " + this.getName() + " of declaring plugin "
+                    + this.getName() + " which takes only the plugin as argument!");
         }
     }
 
@@ -93,7 +125,7 @@ public abstract class LbcfsCommand implements CommandExecutor {
     }
 
     @Override
-    public final boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
+    public final boolean onCommand(@NotNull final CommandSender sender, final Command command, final String label, final String[] args) {
         final SubCommand subCmd = subCommands.get(args.length > 0 ? args[0] : null);
         if (subCmd != null) {
             return subCmd.onCommand(sender, command, label, cutFirstParam(args));
@@ -118,8 +150,8 @@ public abstract class LbcfsCommand implements CommandExecutor {
      * Gets the plugin this command is associated with
      * @return plugin
      */
-    public final LbcfsPlugin getPlugin() {
-        return plugin;
+    public final T getPlugin() {
+        return pluginClass.cast(plugin);
     }
 
     /**
@@ -181,7 +213,76 @@ public abstract class LbcfsCommand implements CommandExecutor {
         return true;
     }
 
+    /**
+     * Executes when tabbed of the Command
+     * @param sender - the sender that executes the command
+     * @param alias - the command alias used for this action
+     * @param args - the args of the command
+     * @return args to use for tab completion
+     */
+    @Override
+    public final List<String> onTabComplete(@NotNull final CommandSender sender, @NotNull Command command,
+                                            @NotNull final String alias, @NotNull final String[] args) {
+        if (args.length == 1) {
+            Stream<String> tabOptionStream;
+            if (tabOptions.size() < 1) {
+                tabOptionStream = Stream.empty();
+            } else {
+                tabOptionStream = tabOptions.get(0).stream();
+            }
+            return Stream.concat(subCommands.values().stream().map(SubCommand::getName),
+                    tabOptionStream).collect(Collectors.toList());
+        }
+        final SubCommand subCmd = subCommands.get(args.length > 1 ? args[1] : null);
+        if (subCmd != null) {
+            //noinspection unchecked
+            return subCmd.onTabComplete(sender, command, alias, cutFirstParam(args));
+        } else {
+            if (args.length > tabOptions.size()) {
+                return new ArrayList<>();
+            }
+            return tabOptions.get(args.length - 1).stream().filter(o -> o.startsWith(args[args.length - 1]))
+                    .collect(Collectors.toList());
+        }
+    }
+
+    /**
+     * Constructs the tab complete options from the entered values. You may supply as many options as you like
+     * The tab complete options have to be sorted in their natural order
+     * @param tabOptions options for this command
+     * @return constructed tablist mapping
+     */
+    private ArrayList<List<String>> constructTabList(String[][] tabOptions) {
+        if (tabOptions == null) {
+            return new ArrayList<>();
+        }
+        if (tabOptions.length > maxParams) {
+            this.plugin.getLogger().log(Level.WARNING, "More tab options were provided for " + this.getName()
+            + " of plugin " + this.plugin.getName() + "! Options were truncated at max!");
+        }
+        return Stream.of(tabOptions).map(List::of).limit(maxParams).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * Override this method to supply tab options to your command. Supply an array of options per allow param depth
+     *
+     * Example: maxParams = 2
+     * new String[][]{ { "test", "version"}, { help } }
+     * @return tab options
+     */
+    protected String[][] getTabOptions() {
+        return null;
+    }
+
     private boolean isPlayerOnly() {
         return this.getClass().isAnnotationPresent(PlayerOnly.class);
+    }
+
+    /**
+     * Checks whether this command supports tab completion
+     * @return true if tab completion is supported
+     */
+    public final boolean supportsTab() {
+        return this.getTabOptions() != null;
     }
 }
