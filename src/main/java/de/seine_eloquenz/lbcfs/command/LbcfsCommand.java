@@ -19,9 +19,13 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * LbcfsCommand is the class you will have to overwrite to create a command with lbcfs
+ * @param <T> your plugin
  */
 public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExecutor {
 
@@ -68,22 +72,42 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
                 try {
                     final SubCommand subCommand;
                     if (subCmd.getEnclosingClass().equals(subCmd)) { //Check if subcommand is declared as own class
-                        final Constructor<?> subCmdConstructor = subCmd.getConstructor(LbcfsPlugin.class);
+                        final Constructor<?> subCmdConstructor = this.getSubCommandConstructor(subCmd);
+                        this.validateSubCmdConstructor(subCmdConstructor, subCmd);
                         subCommand = (SubCommand) subCmdConstructor.newInstance(plugin);
                     } else { //subcommand is inner class
                         if (Modifier.isStatic(subCmd.getModifiers())) {
-                            final Constructor<?> subCmdConstructor = subCmd.getConstructor(LbcfsPlugin.class);
+                            final Constructor<?> subCmdConstructor = this.getSubCommandConstructor(subCmd);
+                            this.validateSubCmdConstructor(subCmdConstructor, subCmd);
                             subCommand = (SubCommand) subCmdConstructor.newInstance(plugin);
                         } else {
-                            final Constructor<?> subCmdConstructor = subCmd.getConstructor(this.getClass(), LbcfsPlugin.class);
+                            final Constructor<?> subCmdConstructor = Stream.of(subCmd.getConstructors())
+                                    .filter(c -> this.getClass().isAssignableFrom(c.getParameterTypes()[0])
+                                            && LbcfsPlugin.class.isAssignableFrom(c.getParameterTypes()[1]))
+                                    .findFirst().orElse(null);
+                            this.validateSubCmdConstructor(subCmdConstructor, subCmd);
                             subCommand = (SubCommand) subCmdConstructor.newInstance(this, plugin);
                         }
                     }
                     subCommands.put(subCommand.getName(), subCommand);
-                } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace(); //Should never happen in production, as all commands need to supply this constructor
                 }
             }
+        }
+    }
+
+    private Constructor<?> getSubCommandConstructor(final Class<?> subCmd) {
+        return Stream.of(subCmd.getConstructors())
+                .filter(c -> LbcfsPlugin.class.isAssignableFrom(c.getParameterTypes()[0]))
+                .findFirst().orElse(null);
+    }
+
+    private void validateSubCmdConstructor(Constructor<?> subCmdConstructor, Class<?> subCmd) throws InstantiationException {
+        if (subCmdConstructor == null) {
+            throw new InstantiationException("Could not find Constructor of " + subCmd.getName()
+                    + " of declaring command " + this.getName() + " of declaring plugin "
+                    + this.getName() + " which takes only the plugin as argument!");
         }
     }
 
