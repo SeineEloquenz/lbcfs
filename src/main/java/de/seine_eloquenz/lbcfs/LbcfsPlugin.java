@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * The LbcfsPlugin class represents a plugin created via the Lbcfs framework. The class implements {@link JavaPlugin}
@@ -100,10 +101,17 @@ public abstract class LbcfsPlugin extends JavaPlugin {
         final Set<Class<?>> cmdClasses = reflections.getTypesAnnotatedWith(Command.class);
         for (final Class<?> cmd : cmdClasses) {
             try {
-                final Constructor<?> constructor = cmd.getConstructor(LbcfsPlugin.class);
+                final Constructor<?> constructor =
+                        Stream.of(cmd.getConstructors())
+                                .filter(c -> LbcfsPlugin.class.isAssignableFrom(c.getParameterTypes()[0]))
+                                .findFirst().orElse(null);
+                if (constructor == null) {
+                    throw new InstantiationException("Could not find Constructor of " + cmd.getName()
+                    + " of declaring plugin " + this.getName() + " which takes only the plugin as argument!");
+                }
                 final LbcfsCommand command = (LbcfsCommand) constructor.newInstance(this);
                 commands.add(command);
-            } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace(); //Should never happen in production, as all commands need to supply this constructor
             }
         }
