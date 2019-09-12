@@ -12,8 +12,8 @@ plugin development including but not limited to, command param validation, deleg
 ## Tab Completion
 Lbcfs supports easy creation of tab completion information. For every subcommand that belongs to a command, the tab
 completion option is created automatically. For your own tab completion options you have to provide a two dimensional 
-string array per (sub)command. You do this by overriding the method `getTaboption()` inherited from `LbcfsCommand` .
-Example for a tppos command:
+string array per (sub)command. You do this by overriding the method `getTaboptions()` inherited from `LbcfsCommand` .
+Example for a command:
 ```java
     @Override
     protected String[][] getTabOptions() {
