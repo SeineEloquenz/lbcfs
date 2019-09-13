@@ -127,7 +127,8 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
     }
 
     @Override
-    public final boolean onCommand(@NotNull final CommandSender sender, final Command command, final String label, final String[] args) {
+    public final boolean onCommand(@NotNull final CommandSender sender, @NotNull final Command command,
+                                   @NotNull final String label, final String[] args) {
         final SubCommand subCmd = subCommands.get(args.length > 0 ? args[0] : null);
         if (subCmd != null) {
             return subCmd.onCommand(sender, command, label, cutFirstParam(args));
@@ -230,7 +231,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
             if (tabOptions.length < 1) {
                 tabOptionStream = Stream.empty();
             } else {
-                tabOptionStream = Arrays.stream(tabOptions[0].of());
+                tabOptionStream = Arrays.stream(tabOptions[0].get());
             }
             return Stream.concat(subCommands.values().stream().map(SubCommand::getName),
                     tabOptionStream).collect(Collectors.toList());
@@ -243,7 +244,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
             if (args.length > tabOptions.length) {
                 return new ArrayList<>();
             }
-            return Arrays.stream(tabOptions[args.length - 1].of()).filter(o -> o.startsWith(args[args.length - 1]))
+            return Arrays.stream(tabOptions[args.length - 1].get()).filter(o -> o.startsWith(args[args.length - 1]))
                     .collect(Collectors.toList());
         }
     }
