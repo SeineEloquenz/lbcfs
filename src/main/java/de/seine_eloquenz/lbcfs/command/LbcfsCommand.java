@@ -18,10 +18,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,7 +39,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
     private final Map<String, SubCommand> subCommands;
     private final int minParams;
     private final int maxParams;
-    private final ArrayList<List<String>> tabOptions;
+    private final TabOption[] tabOptions;
 
     /**
      * Creates a new LbcfsCommand for the given plugin
@@ -225,10 +227,10 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
                                             @NotNull final String alias, @NotNull final String[] args) {
         if (args.length == 1) {
             Stream<String> tabOptionStream;
-            if (tabOptions.size() < 1) {
+            if (tabOptions.length < 1) {
                 tabOptionStream = Stream.empty();
             } else {
-                tabOptionStream = tabOptions.get(0).stream();
+                tabOptionStream = Arrays.stream(tabOptions[0].of());
             }
             return Stream.concat(subCommands.values().stream().map(SubCommand::getName),
                     tabOptionStream).collect(Collectors.toList());
@@ -238,10 +240,10 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
             //noinspection unchecked
             return subCmd.onTabComplete(sender, command, alias, cutFirstParam(args));
         } else {
-            if (args.length > tabOptions.size()) {
+            if (args.length > tabOptions.length) {
                 return new ArrayList<>();
             }
-            return tabOptions.get(args.length - 1).stream().filter(o -> o.startsWith(args[args.length - 1]))
+            return Arrays.stream(tabOptions[args.length - 1].of()).filter(o -> o.startsWith(args[args.length - 1]))
                     .collect(Collectors.toList());
         }
     }
@@ -252,15 +254,15 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
      * @param tabOptions options for this command
      * @return constructed tablist mapping
      */
-    private ArrayList<List<String>> constructTabList(String[][] tabOptions) {
+    private TabOption[] constructTabList(TabOption[] tabOptions) {
         if (tabOptions == null) {
-            return new ArrayList<>();
+            return new TabOption[0];
         }
         if (tabOptions.length > maxParams) {
             this.plugin.getLogger().log(Level.WARNING, "More tab options were provided for " + this.getName()
             + " of plugin " + this.plugin.getName() + "! Options were truncated at max!");
         }
-        return Stream.of(tabOptions).map(List::of).limit(maxParams).collect(Collectors.toCollection(ArrayList::new));
+        return Arrays.copyOfRange(tabOptions, 0, maxParams);
     }
 
     /**
@@ -270,7 +272,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
      * new String[][]{ { "test", "version"}, { help } }
      * @return tab options
      */
-    protected String[][] getTabOptions() {
+    protected TabOption[] getTabOptions() {
         return null;
     }
 
