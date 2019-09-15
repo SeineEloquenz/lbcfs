@@ -5,8 +5,6 @@ import de.seine_eloquenz.lbcfs.annotations.command.MaxArgs;
 import de.seine_eloquenz.lbcfs.annotations.command.MinArgs;
 import de.seine_eloquenz.lbcfs.annotations.command.SubCommand;
 import de.seine_eloquenz.lbcfs.command.LbcfsCommand;
-import de.seine_eloquenz.lbcfs.command.TabOption;
-import de.seine_eloquenz.lbcfs.command.TabOptions;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.annotation.command.Command;
@@ -48,11 +46,6 @@ public class CmdStop extends LbcfsCommand<Lbcfs> {
                     }
                 }, 0L, 200L);
         return true;
-    }
-
-    @Override
-    protected TabOption[] getTabOptions() {
-        return new TabOption[]{TabOptions.of("Test", "Test2"), TabOptions.getPlayers(), TabOptions.of("Hello!")};
     }
 
     /**
