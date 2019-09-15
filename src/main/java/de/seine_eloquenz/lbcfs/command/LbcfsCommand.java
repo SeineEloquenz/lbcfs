@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -39,7 +38,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
     private final Map<String, SubCommand> subCommands;
     private final int minParams;
     private final int maxParams;
-    private final TabOption[] tabOptions;
+    private final TOpt[] tabOptions;
 
     /**
      * Creates a new LbcfsCommand for the given plugin
@@ -217,14 +216,16 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
     }
 
     /**
-     * Executes when tabbed of the Command
+     * Executes when tab is used on the command.
+     * <br/>
+     * <b>Override only if you know what you do and don't want to use {@link Lbcfs} default behaviour</b>
      * @param sender - the sender that executes the command
      * @param alias - the command alias used for this action
      * @param args - the args of the command
      * @return args to use for tab completion
      */
     @Override
-    public final List<String> onTabComplete(@NotNull final CommandSender sender, @NotNull Command command,
+    public List<String> onTabComplete(@NotNull final CommandSender sender, @NotNull Command command,
                                             @NotNull final String alias, @NotNull final String[] args) {
         if (args.length == 1) {
             Stream<String> tabOptionStream;
@@ -236,7 +237,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
             return Stream.concat(subCommands.values().stream().map(SubCommand::getName),
                     tabOptionStream).collect(Collectors.toList());
         }
-        final SubCommand subCmd = subCommands.get(args.length > 1 ? args[1] : null);
+        final SubCommand subCmd = subCommands.get(args.length > 1 ? args[0] : null);
         if (subCmd != null) {
             //noinspection unchecked
             return subCmd.onTabComplete(sender, command, alias, cutFirstParam(args));
@@ -255,15 +256,15 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
      * @param tabOptions options for this command
      * @return constructed tablist mapping
      */
-    private TabOption[] constructTabList(TabOption[] tabOptions) {
+    private TOpt[] constructTabList(TOpt[] tabOptions) {
         if (tabOptions == null) {
-            return new TabOption[0];
+            return new TOpt[0];
         }
         if (tabOptions.length > maxParams) {
             this.plugin.getLogger().log(Level.WARNING, "More tab options were provided for " + this.getName()
             + " of plugin " + this.plugin.getName() + "! Options were truncated at max!");
         }
-        return Arrays.copyOfRange(tabOptions, 0, maxParams);
+        return Arrays.copyOfRange(tabOptions, 0, tabOptions.length);
     }
 
     /**
@@ -273,19 +274,11 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
      * new String[][]{ { "test", "version"}, { help } }
      * @return tab options
      */
-    protected TabOption[] getTabOptions() {
+    protected TOpt[] getTabOptions() {
         return null;
     }
 
     private boolean isPlayerOnly() {
         return this.getClass().isAnnotationPresent(PlayerOnly.class);
-    }
-
-    /**
-     * Checks whether this command supports tab completion
-     * @return true if tab completion is supported
-     */
-    public final boolean supportsTab() {
-        return this.getTabOptions() != null;
     }
 }
