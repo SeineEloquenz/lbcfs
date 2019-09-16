@@ -33,7 +33,7 @@ public final class TOpts {
 
         private final String[] elements;
 
-        public Elements(String... elements) {
+        private Elements(String... elements) {
             this.elements = elements;
         }
 
