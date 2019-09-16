@@ -18,6 +18,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
     private final Map<String, SubCommand> subCommands;
     private final int minParams;
     private final int maxParams;
-    private final ArrayList<List<String>> tabOptions;
+    private final TOpt[] tabOptions;
 
     /**
      * Creates a new LbcfsCommand for the given plugin
@@ -125,7 +126,8 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
     }
 
     @Override
-    public final boolean onCommand(@NotNull final CommandSender sender, final Command command, final String label, final String[] args) {
+    public final boolean onCommand(@NotNull final CommandSender sender, @NotNull final Command command,
+                                   @NotNull final String label, final String[] args) {
         final SubCommand subCmd = subCommands.get(args.length > 0 ? args[0] : null);
         if (subCmd != null) {
             return subCmd.onCommand(sender, command, label, cutFirstParam(args));
@@ -214,35 +216,37 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
     }
 
     /**
-     * Executes when tabbed of the Command
+     * Executes when tab is used on the command.
+     * <br/>
+     * <b>Override only if you know what you do and don't want to use {@link Lbcfs} default behaviour</b>
      * @param sender - the sender that executes the command
      * @param alias - the command alias used for this action
      * @param args - the args of the command
      * @return args to use for tab completion
      */
     @Override
-    public final List<String> onTabComplete(@NotNull final CommandSender sender, @NotNull Command command,
+    public List<String> onTabComplete(@NotNull final CommandSender sender, @NotNull Command command,
                                             @NotNull final String alias, @NotNull final String[] args) {
         if (args.length == 1) {
             Stream<String> tabOptionStream;
-            if (tabOptions.size() < 1) {
+            if (tabOptions.length < 1) {
                 tabOptionStream = Stream.empty();
             } else {
-                tabOptionStream = tabOptions.get(0).stream();
+                tabOptionStream = Arrays.stream(tabOptions[0].get((Player) sender));
             }
             return Stream.concat(subCommands.values().stream().map(SubCommand::getName),
                     tabOptionStream).collect(Collectors.toList());
         }
-        final SubCommand subCmd = subCommands.get(args.length > 1 ? args[1] : null);
+        final SubCommand subCmd = subCommands.get(args.length > 1 ? args[0] : null);
         if (subCmd != null) {
             //noinspection unchecked
             return subCmd.onTabComplete(sender, command, alias, cutFirstParam(args));
         } else {
-            if (args.length > tabOptions.size()) {
+            if (args.length > tabOptions.length) {
                 return new ArrayList<>();
             }
-            return tabOptions.get(args.length - 1).stream().filter(o -> o.startsWith(args[args.length - 1]))
-                    .collect(Collectors.toList());
+            return Arrays.stream(tabOptions[args.length - 1].get((Player) sender))
+                    .filter(o -> o.startsWith(args[args.length - 1])).collect(Collectors.toList());
         }
     }
 
@@ -252,37 +256,29 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
      * @param tabOptions options for this command
      * @return constructed tablist mapping
      */
-    private ArrayList<List<String>> constructTabList(String[][] tabOptions) {
+    private TOpt[] constructTabList(TOpt[] tabOptions) {
         if (tabOptions == null) {
-            return new ArrayList<>();
+            return new TOpt[0];
         }
         if (tabOptions.length > maxParams) {
             this.plugin.getLogger().log(Level.WARNING, "More tab options were provided for " + this.getName()
             + " of plugin " + this.plugin.getName() + "! Options were truncated at max!");
         }
-        return Stream.of(tabOptions).map(List::of).limit(maxParams).collect(Collectors.toCollection(ArrayList::new));
+        return Arrays.copyOfRange(tabOptions, 0, tabOptions.length);
     }
 
     /**
-     * Override this method to supply tab options to your command. Supply an array of options per allow param depth
+     * Override this method to supply tab options to your command. Supply an array of options per allowed param depth
      *
      * Example: maxParams = 2
      * new String[][]{ { "test", "version"}, { help } }
      * @return tab options
      */
-    protected String[][] getTabOptions() {
+    protected TOpt[] getTabOptions() {
         return null;
     }
 
     private boolean isPlayerOnly() {
         return this.getClass().isAnnotationPresent(PlayerOnly.class);
-    }
-
-    /**
-     * Checks whether this command supports tab completion
-     * @return true if tab completion is supported
-     */
-    public final boolean supportsTab() {
-        return this.getTabOptions() != null;
     }
 }

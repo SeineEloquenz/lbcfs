@@ -11,15 +11,18 @@ plugin development including but not limited to, command param validation, deleg
 
 ## Tab Completion
 Lbcfs supports easy creation of tab completion information. For every subcommand that belongs to a command, the tab
-completion option is created automatically. For your own tab completion options you have to provide a two dimensional 
-string array per (sub)command. You do this by overriding the method `getTaboptions()` inherited from `LbcfsCommand` .
+completion option is created automatically. For your own tab completion options you have to provide an Array of `TOpt`'s
+which represent one indentation level of tab completion options. TOpts are a functional interface which returns a string
+array containing the actual tab completion options. Various pre-defined TOpts can be obtained from the `TOpts` utility
+class.
+
 Example for a command:
 ```java
     @Override
-    protected String[][] getTabOptions() {
-        return new String[][] { {"square", "circle"}, {"low", "medium", "high"}, {"cool"}};
+    protected TOpt[] getTabOptions() {
+        return new TOpt[] { TOpts.of("square", "circle"), TOpts.getPlayers(), TOpts.of("cool")};
     }
 ```
-The new syntax is needed because java demands it, I can't circumvent that
-This would result in a 3 level command, where the first argument can either be square or circle, the second low, medium
-or high and the third argument cool.
+The 'new' syntax is needed because java demands it, I can't circumvent that.
+This would result in a 3 level command, where the first argument can either be square or circle, the second are online
+players and the third argument cool.
