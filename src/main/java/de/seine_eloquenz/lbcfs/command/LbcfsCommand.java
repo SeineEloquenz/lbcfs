@@ -232,7 +232,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
             if (tabOptions.length < 1) {
                 tabOptionStream = Stream.empty();
             } else {
-                tabOptionStream = Arrays.stream(tabOptions[0].get());
+                tabOptionStream = Arrays.stream(tabOptions[0].get((Player) sender));
             }
             return Stream.concat(subCommands.values().stream().map(SubCommand::getName),
                     tabOptionStream).collect(Collectors.toList());
@@ -245,8 +245,8 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
             if (args.length > tabOptions.length) {
                 return new ArrayList<>();
             }
-            return Arrays.stream(tabOptions[args.length - 1].get()).filter(o -> o.startsWith(args[args.length - 1]))
-                    .collect(Collectors.toList());
+            return Arrays.stream(tabOptions[args.length - 1].get((Player) sender))
+                    .filter(o -> o.startsWith(args[args.length - 1])).collect(Collectors.toList());
         }
     }
 
@@ -268,7 +268,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
     }
 
     /**
-     * Override this method to supply tab options to your command. Supply an array of options per allow param depth
+     * Override this method to supply tab options to your command. Supply an array of options per allowed param depth
      *
      * Example: maxParams = 2
      * new String[][]{ { "test", "version"}, { help } }
