@@ -33,6 +33,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
 
     private static final String CONFIG_MISSING = "config.yml not found, creating default";
     private static final String CONFIG_FOUND = "config.yml found, loading";
+    private static final String NO_CONFIG = "Plugin has no configuration.";
 
     private static final String BUNDLE_NAME = "locale/Locale";
 
@@ -49,8 +50,12 @@ public abstract class LbcfsPlugin extends JavaPlugin {
         softDependencies = new HashMap<>();
         final File file = new File(this.getDataFolder(), "config.yml");
         if (!file.exists()) {
-            this.saveDefaultConfig();
-            this.getLogger().info(CONFIG_MISSING);
+            if (this.getResource("config.yml") != null) {
+                this.saveDefaultConfig();
+                this.getLogger().info(CONFIG_MISSING);
+            } else {
+                this.getLogger().info(NO_CONFIG);
+            }
         } else {
             this.reloadConfig();
             this.getLogger().info(CONFIG_FOUND);
