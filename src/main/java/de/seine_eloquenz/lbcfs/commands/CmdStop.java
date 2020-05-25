@@ -52,6 +52,8 @@ public class CmdStop extends LbcfsCommand<Lbcfs> {
      * Specifies that the server shall be shut down immediately
      */
     @SubCommand(name = "now", parentCommand = CmdStop.class)
+    @MinArgs(0)
+    @MaxArgs(0)
     public static final class Now extends de.seine_eloquenz.lbcfs.command.SubCommand<Lbcfs> {
 
         /**

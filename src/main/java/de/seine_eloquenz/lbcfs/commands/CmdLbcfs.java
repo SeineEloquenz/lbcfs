@@ -1,6 +1,8 @@
 package de.seine_eloquenz.lbcfs.commands;
 
 import de.seine_eloquenz.lbcfs.Lbcfs;
+import de.seine_eloquenz.lbcfs.annotations.command.MaxArgs;
+import de.seine_eloquenz.lbcfs.annotations.command.MinArgs;
 import de.seine_eloquenz.lbcfs.annotations.command.SubCommand;
 import de.seine_eloquenz.lbcfs.command.LbcfsCommand;
 import org.bukkit.command.CommandSender;
@@ -29,6 +31,8 @@ public class CmdLbcfs extends LbcfsCommand<Lbcfs> {
      * This subcommand prints the version of lbcfs into chat
      */
     @SubCommand(name = "version", parentCommand = CmdLbcfs.class)
+    @MinArgs(0)
+    @MaxArgs(0)
     public final class Version extends de.seine_eloquenz.lbcfs.command.SubCommand<Lbcfs> {
 
         /**
