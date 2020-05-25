@@ -7,6 +7,12 @@ This project aims to create a framework for spigot plugin development to allow f
 creation of new content by providing easy access to necessary, but often tedious, ugly or annoying parts of spigot
 plugin development including but not limited to, command param validation, delegating to subcommands, access to other apis, registering of commands and listeners, creation of plugin.yml, etc...
 
+# Installation
+LBCFS depends on its own plugin annotations library forked from the original spigot one.
+It must be present during server runtime to allow for reflections to analyze the annotations on Commands, Listeners etc...
+For modularity and easy updatabilitys sake, its factored out into another plugin.
+Get it from [here](https://github.com/SeineEloquenz/lbcfs-plugin-annotations).
+
 # Features
 
 ## Tab Completion

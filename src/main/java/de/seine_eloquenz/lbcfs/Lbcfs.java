@@ -1,6 +1,8 @@
 package de.seine_eloquenz.lbcfs;
 
+import de.seine_eloquenz.annotation.dependency.Dependency;
 import de.seine_eloquenz.annotation.permission.Permission;
+import de.seine_eloquenz.annotation.plugin.ApiVersion;
 import org.bukkit.ChatColor;
 import de.seine_eloquenz.annotation.plugin.Plugin;
 import de.seine_eloquenz.annotation.plugin.author.Author;
@@ -14,6 +16,7 @@ import java.util.ResourceBundle;
 @Plugin(name = "LBCFS", version = "1.0")
 @ApiVersion(ApiVersion.Target.v1_15)
 @Author("Alexander Linder")
+@Dependency("Lbcfs-Plugin-Annotations")
 @Permission(name = "lbcfs.admin", desc = "This player acts as an administrator for LBCFS")
 @Permission(name = "lbcfs.team", desc = "This player is a member of the server team")
 public final class Lbcfs extends LbcfsPlugin {
