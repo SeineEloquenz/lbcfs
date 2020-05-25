@@ -120,7 +120,9 @@ public abstract class LbcfsPlugin extends JavaPlugin {
                 e.printStackTrace(); //Should never happen in production, as all commands need to supply this constructor
             }
         }
-        commands.forEach(command -> this.getCommand(command.getName().toLowerCase()).setExecutor(command));
+        //noinspection ConstantConditions The filter guarantees non-nullability, compiler doesn't get it somehow
+        commands.stream().filter(command -> this.getCommand(command.getName().toLowerCase()) != null)
+                .forEach(command -> this.getCommand(command.getName().toLowerCase()).setExecutor(command));
     }
 
     private void  findAndRegisterListeners() {
