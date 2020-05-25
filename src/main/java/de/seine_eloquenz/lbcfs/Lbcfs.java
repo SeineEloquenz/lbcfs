@@ -12,6 +12,7 @@ import java.util.ResourceBundle;
  * Lbcfs main plugin class
  */
 @Plugin(name = "LBCFS", version = "1.0")
+@ApiVersion(ApiVersion.Target.v1_15)
 @Author("Alexander Linder")
 @Permission(name = "lbcfs.admin", desc = "This player acts as an administrator for LBCFS")
 @Permission(name = "lbcfs.team", desc = "This player is a member of the server team")
