@@ -4,7 +4,7 @@ import de.seine_eloquenz.lbcfs.Lbcfs;
 import de.seine_eloquenz.lbcfs.annotations.command.SubCommand;
 import de.seine_eloquenz.lbcfs.command.LbcfsCommand;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.java.annotation.command.Command;
+import de.seine_eloquenz.annotation.command.Command;
 
 /**
  * Prints the version of Lbcfs in chat

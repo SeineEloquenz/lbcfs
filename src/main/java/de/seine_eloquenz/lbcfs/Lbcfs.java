@@ -1,9 +1,9 @@
 package de.seine_eloquenz.lbcfs;
 
+import de.seine_eloquenz.annotation.permission.Permission;
 import org.bukkit.ChatColor;
-import org.bukkit.plugin.java.annotation.permission.Permission;
-import org.bukkit.plugin.java.annotation.plugin.Plugin;
-import org.bukkit.plugin.java.annotation.plugin.author.Author;
+import de.seine_eloquenz.annotation.plugin.Plugin;
+import de.seine_eloquenz.annotation.plugin.author.Author;
 
 import java.util.Locale;
 import java.util.ResourceBundle;

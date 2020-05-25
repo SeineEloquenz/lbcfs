@@ -145,7 +145,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
      * @return name of the command
      */
     public String getName() {
-        return this.getClass().getAnnotation(org.bukkit.plugin.java.annotation.command.Command.class).name();
+        return this.getClass().getAnnotation(de.seine_eloquenz.annotation.command.Command.class).name();
     }
 
     /**

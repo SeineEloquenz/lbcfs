@@ -34,16 +34,11 @@
                         <configuration>
                             <artifactSet>
                                 <includes>
-                                    <include>org.spigotmc:plugin-annotations</include>
                                     <include>org.reflections:reflections</include>
                                     <include>org.javassist:javassist</include>
                                 </includes>
                             </artifactSet>
                         <relocations>
-                            <relocation>
-                                <pattern>org.bukkit.plugin.java.annotation</pattern>
-                                <shadedPattern>de.seine_eloquenz.shaded.annotation</shadedPattern>
-                            </relocation>
                             <relocation>
                                 <pattern>org.reflections</pattern>
                                 <shadedPattern>de.seine_eloquenz.shaded.reflections</shadedPattern>
@@ -97,9 +92,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>plugin-annotations</artifactId>
-            <version>1.2.0-SNAPSHOT</version>
+            <groupId>de.seine_eloquenz</groupId>
+            <artifactId>lbcfs-plugin-annotations</artifactId>
+            <version>1.2.3-SNAPSHOT</version>
         </dependency>
 
         <dependency>

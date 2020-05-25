@@ -7,7 +7,7 @@ import de.seine_eloquenz.lbcfs.annotations.command.SubCommand;
 import de.seine_eloquenz.lbcfs.command.LbcfsCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.java.annotation.command.Command;
+import de.seine_eloquenz.annotation.command.Command;
 
 /**
  * Shuts down the server with a countdown after 30s

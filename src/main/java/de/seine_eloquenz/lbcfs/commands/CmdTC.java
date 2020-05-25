@@ -5,7 +5,7 @@ import de.seine_eloquenz.lbcfs.annotations.command.MinArgs;
 import de.seine_eloquenz.lbcfs.command.LbcfsCommand;
 import de.seine_eloquenz.lbcfs.utils.StringUtils;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.java.annotation.command.Command;
+import de.seine_eloquenz.annotation.command.Command;
 
 /**
  * Sends a message to all online team members
