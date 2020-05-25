@@ -1,5 +1,6 @@
 package de.seine_eloquenz.lbcfs;
 
+import de.seine_eloquenz.annotation.command.Command;
 import de.seine_eloquenz.lbcfs.command.LbcfsCommand;
 import de.seine_eloquenz.lbcfs.io.messaging.ChatIO;
 import org.bukkit.Bukkit;
@@ -7,9 +8,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import de.seine_eloquenz.annotation.command.Command;
 import org.jetbrains.annotations.NotNull;
 import org.reflections.Reflections;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -101,9 +103,15 @@ public abstract class LbcfsPlugin extends JavaPlugin {
         return dependencyClass.cast(this.softDependencies.get(dependencyClass));
     }
 
+    private Reflections buildReflections() {
+        final ConfigurationBuilder builder = new ConfigurationBuilder()
+                .setUrls(ClasspathHelper.forPackage(this.getClass().getPackageName(), this.getClassLoader()))
+                .addClassLoader(this.getClassLoader());
+        return new Reflections(builder);
+    }
+
     private void findAndRegisterCommands() {
-        final Reflections reflections = new Reflections(this.getClass().getPackageName());
-        final Set<Class<?>> cmdClasses = reflections.getTypesAnnotatedWith(Command.class);
+        final Set<Class<?>> cmdClasses = buildReflections().getTypesAnnotatedWith(Command.class);
         for (final Class<?> cmd : cmdClasses) {
             try {
                 final Constructor<?> constructor =
@@ -126,8 +134,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
     }
 
     private void  findAndRegisterListeners() {
-        final Reflections reflections = new Reflections(this.getClass().getPackageName());
-        final Set<Class<?>> listenerClasses = reflections.getTypesAnnotatedWith(de.seine_eloquenz.lbcfs.annotations.Listener.class);
+        final Set<Class<?>> listenerClasses = buildReflections().getTypesAnnotatedWith(de.seine_eloquenz.lbcfs.annotations.Listener.class);
         for (final Class<?> listenerClass : listenerClasses) {
             try {
                 final Constructor<?> constructor = listenerClass.getConstructor();
