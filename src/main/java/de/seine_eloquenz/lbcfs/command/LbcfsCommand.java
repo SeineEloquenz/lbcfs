@@ -42,7 +42,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
 
     /**
      * Creates a new LbcfsCommand for the given plugin
-     * Has to be annotated with {@link org.bukkit.plugin.java.annotation.command.Command}
+     * Has to be annotated with {@link de.seine_eloquenz.annotation.command.Command}
      * You may <b>not</b> annotate commands in your {@link LbcfsPlugin}s main class!
      * Name may not be "?" as this is reserved
      *
