@@ -35,7 +35,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
 
     private final LbcfsPlugin plugin;
     private final Class<T> pluginClass;
-    private final Map<String, SubCommand> subCommands;
+    private final Map<String, SubCommand<T>> subCommands;
     private final int minParams;
     private final int maxParams;
     private final TOpt[] tabOptions;
@@ -53,6 +53,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
             throw new IllegalArgumentException("Invalid name '" + this.getName() + "'!");
         }
         this.plugin = plugin;
+        //noinspection unchecked our reflection magic ensures this works
         this.pluginClass = (Class<T>) plugin.getClass();
         subCommands = new HashMap<>();
         if (this.getClass().isAnnotationPresent(MinArgs.class)) {
@@ -76,23 +77,26 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
             if (subCmd.getAnnotation(de.seine_eloquenz.lbcfs.annotations.command.SubCommand.class).parentCommand()
                     .equals(this.getClass())) {
                 try {
-                    final SubCommand subCommand;
+                    final SubCommand<T> subCommand;
                     if (subCmd.getEnclosingClass().equals(subCmd)) { //Check if subcommand is declared as own class
                         final Constructor<?> subCmdConstructor = this.getSubCommandConstructor(subCmd);
                         this.validateSubCmdConstructor(subCmdConstructor, subCmd);
-                        subCommand = (SubCommand) subCmdConstructor.newInstance(plugin);
+                        //noinspection unchecked our reflection magic ensures this works
+                        subCommand = (SubCommand<T>) subCmdConstructor.newInstance(plugin);
                     } else { //subcommand is inner class
                         if (Modifier.isStatic(subCmd.getModifiers())) {
                             final Constructor<?> subCmdConstructor = this.getSubCommandConstructor(subCmd);
                             this.validateSubCmdConstructor(subCmdConstructor, subCmd);
-                            subCommand = (SubCommand) subCmdConstructor.newInstance(plugin);
+                            //noinspection unchecked our reflection magic ensures this works
+                            subCommand = (SubCommand<T>) subCmdConstructor.newInstance(plugin);
                         } else {
                             final Constructor<?> subCmdConstructor = Stream.of(subCmd.getConstructors())
                                     .filter(c -> this.getClass().isAssignableFrom(c.getParameterTypes()[0])
                                             && LbcfsPlugin.class.isAssignableFrom(c.getParameterTypes()[1]))
                                     .findFirst().orElse(null);
                             this.validateSubCmdConstructor(subCmdConstructor, subCmd);
-                            subCommand = (SubCommand) subCmdConstructor.newInstance(this, plugin);
+                            //noinspection unchecked our reflection magic ensures this works
+                            subCommand = (SubCommand<T>) subCmdConstructor.newInstance(this, plugin);
                         }
                     }
                     subCommands.put(subCommand.getName(), subCommand);
@@ -128,7 +132,7 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
     @Override
     public final boolean onCommand(@NotNull final CommandSender sender, @NotNull final Command command,
                                    @NotNull final String label, final String[] args) {
-        final SubCommand subCmd = subCommands.get(args.length > 0 ? args[0] : null);
+        final SubCommand<T> subCmd = subCommands.get(args.length > 0 ? args[0] : null);
         if (subCmd != null) {
             return subCmd.onCommand(sender, command, label, cutFirstParam(args));
         } else {
@@ -232,9 +236,8 @@ public abstract class LbcfsCommand <T extends LbcfsPlugin> implements CommandExe
             return Stream.concat(subCommands.values().stream().map(SubCommand::getName),
                     tabOptionStream).collect(Collectors.toList());
         }
-        final SubCommand subCmd = subCommands.get(args.length > 1 ? args[0] : null);
+        final SubCommand<T> subCmd = subCommands.get(args.length > 1 ? args[0] : null);
         if (subCmd != null) {
-            //noinspection unchecked
             return subCmd.onTabComplete(sender, command, alias, cutFirstParam(args));
         } else {
             if (args.length > tabOptions.length) {
