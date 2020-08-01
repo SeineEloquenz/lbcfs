@@ -6,9 +6,11 @@ import de.seine_eloquenz.annotation.plugin.ApiVersion;
 import org.bukkit.ChatColor;
 import de.seine_eloquenz.annotation.plugin.Plugin;
 import de.seine_eloquenz.annotation.plugin.author.Author;
+import org.reflections.Reflections;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
 
 /**
  * Lbcfs main plugin class
@@ -31,6 +33,21 @@ public final class Lbcfs extends LbcfsPlugin {
     @Override
     public String getChatPrefix() {
         return "LBCFS";
+    }
+
+    @Override
+    void preReflectionsHook() {
+        if (!getConfig().getBoolean("logreflections")) {
+            try {
+                Reflections.class.getField("log").set(null, null);
+                getLogger().log(Level.INFO, "Disabled Reflections logging");
+            } catch (IllegalAccessException | NoSuchFieldException e) {
+                getLogger().log(Level.WARNING, "Couldn't disable Reflections Logging, dumping Stacktrace:");
+                // This should never happen, but if it does, we want to know about it.
+                // We won't handle the error, as it doesn't affect functionality
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override

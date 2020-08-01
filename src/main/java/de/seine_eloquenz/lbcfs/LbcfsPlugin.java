@@ -63,11 +63,20 @@ public abstract class LbcfsPlugin extends JavaPlugin {
             this.getLogger().info(CONFIG_FOUND);
         }
         this.registerDependencies();
+        preReflectionsHook();
         this.findAndRegisterCommands();
         this.findAndRegisterListeners();
         setup();
         listeners.forEach(listener -> Bukkit.getServer().getPluginManager().registerEvents(listener, this));
 
+    }
+
+    /**
+     * Hook executed prior to running any Reflections.
+     * This is needed by LBCFS and therefore package private
+     */
+    void preReflectionsHook() {
+        //This method is overwritten in LBCFS
     }
 
     private void registerDependencies() {
