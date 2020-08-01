@@ -40,7 +40,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
     private static final String BUNDLE_NAME = "locale/Locale";
 
     private Collection<Listener> listeners;
-    private Collection<LbcfsCommand> commands;
+    private Collection<LbcfsCommand<?>> commands;
     private Map<Class<Plugin>, Plugin> hardDependencies;
     private Map<Class<Plugin>, Plugin> softDependencies;
 
@@ -131,7 +131,7 @@ public abstract class LbcfsPlugin extends JavaPlugin {
                     throw new InstantiationException("Could not find Constructor of " + cmd.getName()
                     + " of declaring plugin " + this.getName() + " which takes only the plugin as argument!");
                 }
-                final LbcfsCommand command = (LbcfsCommand) constructor.newInstance(this);
+                final LbcfsCommand<?> command = (LbcfsCommand<?>) constructor.newInstance(this);
                 commands.add(command);
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace(); //Should never happen in production, as all commands need to supply this constructor
